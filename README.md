@@ -1,58 +1,30 @@
-#ripple-lib
+#ripplelib
 
 A JavaScript API for interacting with Ripple in Node.js and the browser
+(a fork from ripple-lib-0.12)
 
-[![Build Status](https://travis-ci.org/ripple/ripple-lib.svg?branch=develop)](https://travis-ci.org/ripple/ripple-lib) [![Coverage Status](https://coveralls.io/repos/ripple/ripple-lib/badge.png?branch=develop)](https://coveralls.io/r/ripple/ripple-lib?branch=develop)
-
-[![NPM](https://nodei.co/npm/ripple-lib.png)](https://www.npmjs.org/package/ripple-lib)
-
-###Features
+##Features
 
 + Connect to a rippled server in JavaScript (Node.js or browser)
 + Issue [rippled API](https://ripple.com/build/rippled-apis/) requests
 + Listen to events on the Ripple network (transaction, ledger, etc.)
 + Sign and submit transactions to the Ripple network
 
-###In this file
-
-1. [Installation](#installation)
-2. [Quick start](#quick-start)
-3. [Running tests](#running-tests)
-
-###Additional documentation
-
-1. [Guides](docs/GUIDES.md)
-2. [API Reference](docs/REFERENCE.md)
-3. [Wiki](https://ripple.com/wiki/Ripple_JavaScript_library)
-
-###Also see
-
-+ [The Ripple wiki](https://ripple.com/wiki)
-+ [ripple.com](https://ripple.com)
 
 ##Installation
 
 **Via npm for Node.js**
 
 ```
-  $ npm install ripple-lib
+  $ npm install ripplelib
 ```
 
-**Via bower (for browser use)**
+**Building ripplelib for browser environments**
+
+ripplelib uses Gulp to generate browser builds. These steps will generate minified and non-minified builds of ripplelib in the `build/` directory.
 
 ```
-  $ bower install ripple
-```
-
-See the [bower-ripple repo](https://github.com/ripple/bower-ripple) for additional bower instructions
-
-
-**Building ripple-lib for browser environments**
-
-ripple-lib uses Gulp to generate browser builds. These steps will generate minified and non-minified builds of ripple-lib in the `build/` directory.
-
-```
-  $ git clone https://github.com/ripple/ripple-lib
+  $ git clone https://github.com/ripplerm/ripplelib
   $ npm install
   $ npm run build
 ```
@@ -65,13 +37,13 @@ You may generate browser builds that contain a subset of features. To do this, r
 
 ##Quick start
 
-`Remote.js` ([remote.js](https://github.com/ripple/ripple-lib/blob/develop/src/js/ripple/remote.js)) is the point of entry for interacting with rippled
+`Remote.js` ([remote.js](https://github.com/ripplerm/ripplelib/blob/master/dist/npm/remote.js)) is the point of entry for interacting with rippled
 
 ```js
-/* Loading ripple-lib with Node.js */
-var Remote = require('ripple-lib').Remote;
+/* Loading ripplelib with Node.js */
+var Remote = require('ripplelib').Remote;
 
-/* Loading ripple-lib in a webpage */
+/* Loading ripplelib in a webpage */
 // var Remote = ripple.Remote;
 
 var remote = new Remote({
@@ -95,6 +67,6 @@ remote.connect(function() {
 
 3. `npm test`
 
-**Generating code coverage**
+##More Information
 
-ripple-lib uses `istanbul` to generate code coverage. To create a code coverage report, run `npm test --coverage`. The report will be created in `coverage/lcov-report/`.
++ [Ripple Dev Portal](https://ripple.com/build/)
