@@ -348,7 +348,7 @@ Remote.prototype.setSecret = function (account, secret, id) {
   this.secrets[account] = secret;
 
   // try to cache keypairs, so we don't need to re-generate it for each tx.
-  //this.setKey(account, this.generateKey(secret, id));
+  this.setKey(account, this.generateKey(secret, id));
 };
 
 

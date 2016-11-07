@@ -25,3 +25,5 @@ exports.HASH_LEAF_NODE = 0x4D4C4E00; // 'MLN'
 exports.HASH_TX_SIGN = 0x53545800; // 'STX'
 // inner transaction to sign (TESTNET)
 exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+// inner transaction to multisign
+exports.HASH_TX_MULTISIGN = 0x534D5400; // 'SMT'

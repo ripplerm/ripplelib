@@ -49,6 +49,7 @@ function Transaction(remote) {
   this.attempts = 0;
   this.submissions = 0;
   this.responses = 0;
+  this._maxSignerNum = 8;
 
   this.once('success', function (message) {
     // Transaction definitively succeeded
@@ -282,13 +283,12 @@ Transaction.prototype.getManager = function (account_) {
 Transaction.prototype.getKey =
 Transaction.prototype.getKeyPair =
 Transaction.prototype._accountKeyPair = function(account_) {
-  if (!this.remote) {
+  if (!this.remote || this._secret) {
     return this.generateKey();
   }
 
   var account = account_ || this.tx_json.Account;
-  return this._secret ? this.remote.generateKey(this._secret) : this.remote.getKey(account);
-  //return this._secret ? this.remote.generateKey(this._secret) : this.remote.getKey[account];
+  return this.remote.getKey(account);
 }
 
 Transaction.prototype.generateKey =
@@ -395,24 +395,21 @@ Transaction.prototype.complete = function () {
     }
   }
 
-  if (!this._secret) {
-    this._secret = this.getSecret();
-  }
-
-  // Try to auto-fill the secret
-  if (!this._secret) {
-    this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
-    return false;
-  }
-
   if (typeof this.tx_json.SigningPubKey === 'undefined') {
-    try {
-      var seed = Seed.from_json(this._secret);
-      var key = seed.get_key(this.tx_json.Account);
-      this.tx_json.SigningPubKey = key.to_hex_pub();
-    } catch (e) {
-      this.emit('error', new RippleError('tejSecretInvalid', 'Invalid secret'));
-      return false;
+    if (this._multiSign) { 
+      this.tx_json.SigningPubKey = ''; 
+    } else {
+      if (!this._secret && !(this._secret = this.getSecret())) {
+        this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
+        return false;
+      }      
+      try {
+        var key = this.getKey();
+        this.tx_json.SigningPubKey = key.to_hex_pub();
+      } catch (e) {
+        this.emit('error', new RippleError('tejSecretInvalid', 'Invalid secret'));
+        return false;
+      }
     }
   }
 
@@ -420,11 +417,17 @@ Transaction.prototype.complete = function () {
   // an assigned server
   if (this.remote && typeof this.tx_json.Fee === 'undefined') {
     if (this.remote.local_fee || !this.remote.trusted) {
-      this.tx_json.Fee = this._computeFee();
-      if (!this.tx_json.Fee) {
+      var fee = this._computeFee();
+      if (!fee) {
         this.emit('error', new RippleError('tejUnconnected'));
         return false;
-      }   
+      }
+      if (this._multiSign) {
+        var num = this._signerNum || 2; //default to 2-signatures
+        this.tx_json.Fee = String(Number(fee) * (num + 1));
+      } else {
+        this.tx_json.Fee = fee;  
+      }      
     }
   }
 
@@ -470,6 +473,8 @@ Transaction.prototype.hash = function (prefix_, asUINT256, serialized) {
 };
 
 Transaction.prototype.sign = function (testnet) {
+  if (this._multiSign) return this;
+
   var prev_sig = this.tx_json.TxnSignature;
   delete this.tx_json.TxnSignature;
   var hash = this.signingHash(testnet);
@@ -489,6 +494,83 @@ Transaction.prototype.sign = function (testnet) {
 
   return this;
 };
+
+Transaction.prototype.multiSigningHash = function(account) {
+  var prev_sig = this.tx_json.Signers;
+  delete this.tx_json.Signers;
+
+  var prefix = hashprefixes['HASH_TX_MULTISIGN'];
+  var suffix = UInt160.from_json(account).to_bytes();
+  var hash = this.serialize().hash(prefix, suffix);
+
+  this.tx_json.Signers = prev_sig;
+  return hash.to_hex();
+};
+
+Transaction.prototype.getSignatureFor = function(account) {
+  var signer = {
+    Signer : {
+      Account : account,
+      SigningPubKey : '',
+      TxnSignature : ''
+    }
+  }
+
+  var prev_sig = this.tx_json.Signers;
+  delete this.tx_json.Signers;
+
+  var hash = this.multiSigningHash(account);
+
+  var key = this.getKey(account);
+  var sig = key.sign(hash, 0);
+  var hex = sjcl.codec.hex.fromBits(sig).toUpperCase();
+
+  signer.Signer.SigningPubKey = key.to_hex_pub();
+  signer.Signer.TxnSignature = hex;
+  this.tx_json.Signers = prev_sig;
+
+  return signer;
+}
+
+Transaction.prototype.multiSignFor = function(account) {
+  this.addSignature(this.getSignatureFor(account));
+  return this;
+}
+
+Transaction.prototype.addSignature = function(signer) {
+  if (! Array.isArray(this.tx_json.Signers)) {
+    this.tx_json.Signers = [];  
+  }
+  this.tx_json.Signers.push(signer);
+  if (this.tx_json.Signers.length > this._maxSignerNum) {
+    throw new Error('Maximum Number of Signatures Exceeded.');
+  }
+  this.sortSigners();
+  return this;
+}
+
+Transaction.prototype.sortSigners = function() {
+  if (! Array.isArray(this.tx_json.Signers)) return;
+  this.tx_json.Signers.sort(function(a,b){
+    return UInt160.from_json(a.Signer.Account)._value.greaterEquals(UInt160.from_json(b.Signer.Account)._value);
+  });
+  return this;
+}
+
+Transaction.prototype.clearSignatures = function() {
+  this.tx_json.Signers = []
+  return this;
+}
+
+Transaction.prototype.setMultiSign = function(sigNum) {
+  this._multiSign = true;
+  if (typeof sigNum === 'number') this._signerNum = sigNum;
+  return this;
+}
+
+Transaction.prototype.isMultiSign = function() {
+  return this._multiSign;
+}
 
 /**
  * Add an ID to cached list of submitted IDs

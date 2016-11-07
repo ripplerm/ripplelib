@@ -289,7 +289,7 @@ SerializedObject.prototype.serialize = function (typedef, obj) {
   */
 };
 
-SerializedObject.prototype.hash = function (prefix) {
+SerializedObject.prototype.hash = function (prefix, suffix) {
   var sign_buffer = new SerializedObject();
 
   // Add hashing prefix
@@ -299,6 +299,7 @@ SerializedObject.prototype.hash = function (prefix) {
 
   // Copy buffer to temporary buffer
   sign_buffer.append(this.buffer);
+  if (suffix) sign_buffer.append(suffix);
 
   var bits = sjcl.codec.bytes.toBits(sign_buffer.buffer);
   var sha512hex = sjcl.codec.hex.fromBits(sjcl.hash.sha512.hash(bits));

@@ -51,7 +51,8 @@ var FIELDS_MAP = exports.fields = {
   // Common types
   1: { // Int16
     1: 'LedgerEntryType',
-    2: 'TransactionType'
+    2: 'TransactionType',
+    3: 'SignerWeight'    
   },
   2: { // Int32
     2: 'Flags',
@@ -86,7 +87,11 @@ var FIELDS_MAP = exports.fields = {
     31: 'ReserveBase',
     32: 'ReserveIncrement',
     33: 'SetFlag',
-    34: 'ClearFlag'
+    34: 'ClearFlag',
+    35: 'SignerQuorum',
+    36: 'CancelAfter',
+    37: 'FinishAfter',
+    38: 'SignerListID'    
   },
   3: { // Int64
     1: 'IndexNext',
@@ -127,6 +132,7 @@ var FIELDS_MAP = exports.fields = {
     7: 'HighLimit',
     8: 'Fee',
     9: 'SendMax',
+    10: 'DeliverMin',    
     16: 'MinimumOffer',
     17: 'RippleEscrow',
     18: 'DeliveredAmount'
@@ -165,13 +171,15 @@ var FIELDS_MAP = exports.fields = {
     7: 'FinalFields',
     8: 'NewFields',
     9: 'TemplateEntry',
-    10: 'Memo'
+    10: 'Memo',
+    11: 'SignerEntry',
+    16: 'Signer'    
   },
   15: { // Array
     1: undefined, // end of Array
     2: 'SigningAccounts',
-    3: 'TxnSignatures',
-    4: 'Signatures',
+    3: 'Signers',
+    4: 'SignerEntries',
     5: 'Template',
     6: 'Necessary',
     7: 'Sufficient',
@@ -213,7 +221,7 @@ var REQUIRED = exports.REQUIRED = 0,
     OPTIONAL = exports.OPTIONAL = 1,
     DEFAULT = exports.DEFAULT = 2;
 
-var base = [['TransactionType', REQUIRED], ['Flags', OPTIONAL], ['SourceTag', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['Account', REQUIRED], ['Sequence', REQUIRED], ['Fee', REQUIRED], ['OperationLimit', OPTIONAL], ['SigningPubKey', REQUIRED], ['TxnSignature', OPTIONAL], ['AccountTxnID', OPTIONAL], ['Memos', OPTIONAL]];
+var base = [['TransactionType', REQUIRED], ['Flags', OPTIONAL], ['SourceTag', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['Account', REQUIRED], ['Sequence', REQUIRED], ['Fee', REQUIRED], ['OperationLimit', OPTIONAL], ['SigningPubKey', REQUIRED], ['TxnSignature', OPTIONAL], ['AccountTxnID', OPTIONAL], ['Memos', OPTIONAL], ['Signers', OPTIONAL]];
 
 exports.tx = {
   AccountSet: [3].concat(base, [['EmailHash', OPTIONAL], ['WalletLocator', OPTIONAL], ['WalletSize', OPTIONAL], ['MessageKey', OPTIONAL], ['Domain', OPTIONAL], ['TransferRate', OPTIONAL], ['SetFlag', OPTIONAL], ['ClearFlag', OPTIONAL]]),
@@ -221,14 +229,18 @@ exports.tx = {
   OfferCreate: [7].concat(base, [['TakerPays', REQUIRED], ['TakerGets', REQUIRED], ['Expiration', OPTIONAL], ['OfferSequence', OPTIONAL]]),
   OfferCancel: [8].concat(base, [['OfferSequence', REQUIRED]]),
   SetRegularKey: [5].concat(base, [['RegularKey', OPTIONAL]]),
-  Payment: [0].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['SendMax', OPTIONAL], ['Paths', DEFAULT], ['InvoiceID', OPTIONAL], ['DestinationTag', OPTIONAL]]),
+  Payment: [0].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['SendMax', OPTIONAL], ['DeliverMin', OPTIONAL], ['Paths', DEFAULT], ['InvoiceID', OPTIONAL], ['DestinationTag', OPTIONAL]]),
   Contract: [9].concat(base, [['Expiration', REQUIRED], ['BondAmount', REQUIRED], ['StampEscrow', REQUIRED], ['RippleEscrow', REQUIRED], ['CreateCode', OPTIONAL], ['FundCode', OPTIONAL], ['RemoveCode', OPTIONAL], ['ExpireCode', OPTIONAL]]),
   RemoveContract: [10].concat(base, [['Target', REQUIRED]]),
   EnableFeature: [100].concat(base, [['Feature', REQUIRED]]),
   EnableAmendment: [100].concat(base, [['Amendment', REQUIRED]]),
-  SetFee: [101].concat(base, [['BaseFee', REQUIRED], ['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED]]),
+  SetFee: [101].concat(base, [['Features', REQUIRED], ['BaseFee', REQUIRED], ['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED]]),
   TicketCreate: [10].concat(base, [['Target', OPTIONAL], ['Expiration', OPTIONAL]]),
-  TicketCancel: [11].concat(base, [['TicketID', REQUIRED]])
+  TicketCancel: [11].concat(base, [['TicketID', REQUIRED]]),
+  SignerListSet: [12].concat(base, [['SignerQuorum', REQUIRED], ['SignerEntries', OPTIONAL]]),
+  SuspendedPaymentCreate: [1].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['Digest', OPTIONAL], ['CancelAfter', OPTIONAL], ['FinishAfter', OPTIONAL], ['DestinationTag', OPTIONAL]]),
+  SuspendedPaymentFinish: [2].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED], ['Method', OPTIONAL], ['Digest', OPTIONAL], ['Proof', OPTIONAL]]),
+  SuspendedPaymentCancel: [4].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED]])  
 };
 
 var sleBase = [['LedgerIndex', OPTIONAL], ['LedgerEntryType', REQUIRED], ['Flags', REQUIRED]];
