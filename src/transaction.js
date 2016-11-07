@@ -275,6 +275,33 @@ Transaction.prototype.getManager = function (account_) {
 };
 
 /**
+ * Get keypair for signing.
+ *
+ * @param [String] account
+ */
+Transaction.prototype.getKey =
+Transaction.prototype.getKeyPair =
+Transaction.prototype._accountKeyPair = function(account_) {
+  if (!this.remote) {
+    return this.generateKey();
+  }
+
+  var account = account_ || this.tx_json.Account;
+  return this._secret ? this.remote.generateKey(this._secret) : this.remote.getKey(account);
+  //return this._secret ? this.remote.generateKey(this._secret) : this.remote.getKey[account];
+}
+
+Transaction.prototype.generateKey =
+Transaction.prototype.generateKeyPair = function(secret) {
+  secret = secret || this._secret;
+  try {
+    return Seed.from_json(secret).get_key();
+  } catch(e) {
+    throw new Error('Invalid Secret!');
+  }
+}
+
+/**
  * Get transaction secret
  *
  * @param [String] account
@@ -397,7 +424,7 @@ Transaction.prototype.complete = function () {
       if (!this.tx_json.Fee) {
         this.emit('error', new RippleError('tejUnconnected'));
         return false;
-      }
+      }   
     }
   }
 
@@ -443,11 +470,8 @@ Transaction.prototype.hash = function (prefix_, asUINT256, serialized) {
 };
 
 Transaction.prototype.sign = function (testnet) {
-  var seed = Seed.from_json(this._secret);
   var prev_sig = this.tx_json.TxnSignature;
-
   delete this.tx_json.TxnSignature;
-
   var hash = this.signingHash(testnet);
 
   // If the hash is the same, we can re-use the previous signature
@@ -456,7 +480,7 @@ Transaction.prototype.sign = function (testnet) {
     return this;
   }
 
-  var key = seed.get_key(this.tx_json.Account);
+  var key = this.getKey();
   var sig = key.sign(hash);
   var hex = sjcl.codec.hex.fromBits(sig).toUpperCase();
 
