@@ -4,9 +4,9 @@
 
 const assert = require('assert');
 const lodash = require('lodash');
-const SerializedObject = require('ripple-lib').SerializedObject;
-const Amount = require('ripple-lib').Amount;
-const sjcl = require('ripple-lib').sjcl;
+const SerializedObject = require('ripplelib').SerializedObject;
+const Amount = require('ripplelib').Amount;
+const sjcl = require('ripplelib').sjcl;
 
 // Shortcuts
 const hex = sjcl.codec.hex;

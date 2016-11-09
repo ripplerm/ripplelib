@@ -1,7 +1,7 @@
 /* eslint max-len: 0 */
 'use strict';
 const assert = require('assert');
-const Seed = require('ripple-lib').Seed;
+const Seed = require('ripplelib').Seed;
 
 function assert_helper(seed_json, address_or_nth, expected) {
   const seed = Seed.from_json(seed_json);

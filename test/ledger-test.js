@@ -4,7 +4,7 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const Ledger = require('ripple-lib').Ledger;
+const Ledger = require('ripplelib').Ledger;
 
 /**
 * @param ledger_index {Number}

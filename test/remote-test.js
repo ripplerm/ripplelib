@@ -3,14 +3,14 @@
 'use strict';
 
 const assert = require('assert-diff');
-const Remote = require('ripple-lib').Remote;
-const Server = require('ripple-lib').Server;
-const Transaction = require('ripple-lib').Transaction;
-const UInt160 = require('ripple-lib').UInt160;
-const Currency = require('ripple-lib').Currency;
-const Amount = require('ripple-lib').Amount;
-const PathFind = require('ripple-lib')._test.PathFind;
-const Log = require('ripple-lib')._test.Log;
+const Remote = require('ripplelib').Remote;
+const Server = require('ripplelib').Server;
+const Transaction = require('ripplelib').Transaction;
+const UInt160 = require('ripplelib').UInt160;
+const Currency = require('ripplelib').Currency;
+const Amount = require('ripplelib').Amount;
+const PathFind = require('ripplelib')._test.PathFind;
+const Log = require('ripplelib')._test.Log;
 
 let options, remote, callback;
 
@@ -36,6 +36,13 @@ describe('Remote', function() {
 
   afterEach(function() {
     Log.setEngine(initialLogEngine);
+  });
+
+  it('Set secret -- invalid secret', function() {
+    assert.throws(
+      function() {
+        remote.setSecret(ADDRESS, 'sss');
+      }, Error);
   });
 
   it('Server initialization -- url object', function() {

@@ -5,11 +5,11 @@
 const ws = require('ws');
 const lodash = require('lodash');
 const assert = require('assert-diff');
-const sjcl = require('ripple-lib').sjcl;
-const Remote = require('ripple-lib').Remote;
-const SerializedObject = require('ripple-lib').SerializedObject;
-const Transaction = require('ripple-lib').Transaction;
-const TransactionManager = require('ripple-lib')._test.TransactionManager;
+const sjcl = require('ripplelib').sjcl;
+const Remote = require('ripplelib').Remote;
+const SerializedObject = require('ripplelib').SerializedObject;
+const Transaction = require('ripplelib').Transaction;
+const TransactionManager = require('ripplelib')._test.TransactionManager;
 
 const LEDGER = require('./fixtures/transactionmanager').LEDGER;
 const ACCOUNT = require('./fixtures/transactionmanager').ACCOUNT;
@@ -667,11 +667,11 @@ describe('TransactionManager', function() {
   });
 
   it('Submit transaction -- invalid secret', function(done) {
-    remote.setSecret(ACCOUNT.address, ACCOUNT.secret + 'z');
-
     const transaction = remote.createTransaction('AccountSet', {
       account: ACCOUNT.address
     });
+
+    transaction._secret = ACCOUNT.secret + 'z';
 
     rippled.once('request_submit', function() {
       assert(false, 'Should not request submit');

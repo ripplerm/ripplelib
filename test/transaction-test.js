@@ -4,11 +4,11 @@
 
 const assert = require('assert');
 const lodash = require('lodash');
-const Transaction = require('ripple-lib').Transaction;
-const TransactionQueue = require('ripple-lib').TransactionQueue;
-const Remote = require('ripple-lib').Remote;
-const Server = require('ripple-lib').Server;
-const sjcl = require('ripple-lib').sjcl;
+const Transaction = require('ripplelib').Transaction;
+const TransactionQueue = require('ripplelib').TransactionQueue;
+const Remote = require('ripplelib').Remote;
+const Server = require('ripplelib').Server;
+const sjcl = require('ripplelib').sjcl;
 
 const transactionResult = {
   engine_result: 'tesSUCCESS',
@@ -553,6 +553,48 @@ describe('Transaction', function() {
     done();
   });
 
+  it('Complete transaction - multiSign', function(done) {
+    const transaction = new Transaction();
+    transaction.setMultiSign();
+
+    assert(transaction.complete());
+    assert.strictEqual(transaction.tx_json.SigningPubKey, '');
+    done();
+  });
+
+  it('Complete transaction - multiSign compute fee', function(done) {
+    const remote = new Remote();
+
+    const s1 = new Server(remote, 'wss://s-west.ripple.com:443');
+    s1._connected = true;
+
+    remote._servers = [s1];
+    remote.trusted = true;
+    remote.local_signing = true;
+
+    const transaction = new Transaction(remote);
+    transaction.setMultiSign(3);
+
+    assert(transaction.complete());
+    assert.strictEqual(transaction.tx_json.Fee, '48');
+    done();
+  });
+
+  it('Get signing hash - multiSign', function(done) {
+    const transaction = new Transaction();
+    const account = 'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK';
+    transaction.tx_json.SigningPubKey = '';
+    transaction.tx_json.Account = 'rMWwx3Ma16HnqSd4H6saPisihX9aKpXxHJ';
+    transaction.tx_json.Flags = 0;
+    transaction.tx_json.Fee = 36;
+    transaction.tx_json.Sequence = 1;
+    transaction.tx_json.TransactionType = 'AccountSet';
+
+    assert.strictEqual(transaction.multiSigningHash(account), '02E6B97AEA276B08D085F7E23392EF214B035BC9FC70B4ED8D9C957C70750EFB');
+
+    done();
+  });
+
   it('Get signing hash', function(done) {
     const transaction = new Transaction();
     transaction._secret = 'sh2pTicynUEG46jjR4EoexHcQEoij';
@@ -824,6 +866,32 @@ describe('Transaction', function() {
 
     done();
   });
+
+  it('Get signature for multisign-transaction', function(done) {    
+    const remote = new Remote();
+
+    remote.secrets = {
+      rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK: 'shY1njzHAXp8Qt3bpxYW6RpoZtMKP'
+    };
+
+    const transaction = new Transaction(remote);
+    const account = 'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK';
+    transaction.tx_json.SigningPubKey = '';
+    transaction.tx_json.Account = 'rMWwx3Ma16HnqSd4H6saPisihX9aKpXxHJ';
+    transaction.tx_json.Flags = 0;
+    transaction.tx_json.Fee = 36;
+    transaction.tx_json.Sequence = 1;
+    transaction.tx_json.TransactionType = 'AccountSet';
+
+    const s = transaction.getSignatureFor(account);
+
+    assert.strictEqual(s.Signer.Account, 'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK');
+    assert.strictEqual(s.Signer.SigningPubKey, '021BB94B1DCB9F728FAE7D32C62CCE28F829F04D2A8AA1C3D9BA35E7380CDB27B2');    
+    assert(/^[A-Z0-9]+$/.test(s.Signer.TxnSignature));
+
+    done();
+  });
+
 
   it('Add transaction ID', function(done) {
     const transaction = new Transaction();

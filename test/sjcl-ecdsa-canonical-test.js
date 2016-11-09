@@ -1,6 +1,6 @@
 var assert = require('assert');
-var sjcl   = require('ripple-lib').sjcl;
-var Seed   = require('ripple-lib').Seed;
+var sjcl   = require('ripplelib').sjcl;
+var Seed   = require('ripplelib').Seed;
 
 describe('SJCL ECDSA Canonicalization', function() {
   describe('canonicalizeSignature', function() {

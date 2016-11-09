@@ -1,5 +1,5 @@
 var assert = require('assert');
-var utils  = require('ripple-lib').utils;
+var utils  = require('ripplelib').utils;
 
 describe('Utils', function() {
   describe('hexToString and stringToHex', function() {

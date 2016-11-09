@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
 'use strict';
 const assert = require('assert');
-const sjcl = require('ripple-lib').sjcl;
-const Message = require('ripple-lib').Message;
-const Seed = require('ripple-lib').Seed;
-const Remote = require('ripple-lib').Remote;
+const sjcl = require('ripplelib').sjcl;
+const Message = require('ripplelib').Message;
+const Seed = require('ripplelib').Seed;
+const Remote = require('ripplelib').Remote;
 
 describe('Message', function() {
 

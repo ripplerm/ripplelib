@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('assert');
-const Base = require('ripple-lib').Base;
+const Base = require('ripplelib').Base;
 const fixtures = require('./fixtures/base58.json');
 
 function digitArray(str) {

@@ -2,7 +2,7 @@
 /* eslint new-cap: [2, {newIsCapExceptions: ["bn"]}] */
 'use strict';
 const assert = require('assert');
-const sjcl = require('ripple-lib').sjcl;
+const sjcl = require('ripplelib').sjcl;
 
 // fix normalize bug in scjl:
 // https://github.com/bitwiseshiftleft/sjcl/pull/221
