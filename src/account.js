@@ -85,12 +85,29 @@ function Account(remote, account) {
 
       if (isAccountRoot) {
         extend(self._entry, an.fieldsNew, an.fieldsFinal);
+        Object.keys(an.fieldsPrev).forEach(function(field){
+          if (!an.fieldsFinal.hasOwnProperty(field)) delete self._entry[field];
+        })
+        changed = true;
+      }
+
+      if (an.entryType === 'SignerList') {
+        switch (an.nodeType) {
+          case 'CreatedNode':
+          case 'ModifiedNode':
+            if (!(self._entry.signer_lists && self._entry.signer_lists[0])) self._entry.signer_lists = [{}];
+            extend(self._entry.signer_lists[0], an.fieldsNew, an.fieldsFinal);
+            break;
+          case 'DeletedNode':
+            self._entry.signer_lists = [];
+            break;
+        }
         changed = true;
       }
     });
 
     if (changed) {
-      self.emit('entry', self._entry);
+      self.emit('entry', self._entry, transaction.ledger_index);
     }
   };
 
@@ -130,7 +147,7 @@ Account.prototype.isValid = function () {
  */
 
 Account.prototype.getInfo = function (callback) {
-  return this._remote.requestAccountInfo({ account: this._account_id }, callback);
+  return this._remote.requestAccountInfo({account: this._account_id, signer_lists: true, ledger:'validated'}, callback);
 };
 
 /**
@@ -150,8 +167,8 @@ Account.prototype.entry = function (callback) {
     if (err) {
       callback(err);
     } else {
-      extend(self._entry, info.account_data);
-      self.emit('entry', self._entry);
+      self._entry = extend({}, info.account_data);
+      self.emit('entry', self._entry, info.ledger_index);
       callback(null, info);
     }
   };

@@ -1293,6 +1293,10 @@ Remote.accountRequest = function (command, options_, callback_) {
     request.message.marker = marker;
   }
 
+  ['strict', 'queue', 'signer_lists'].forEach(function (key){
+    if (_options.hasOwnProperty(key)) request.message[key] = _options[key];  
+  });
+
   request.callback(callback);
 
   return request;
