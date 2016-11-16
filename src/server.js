@@ -868,7 +868,7 @@ Server.prototype._reserve = function (ownerCount) {
     throw new Error('Owner count must not be negative.');
   }
 
-  return reserve_base.add(reserve_inc.product_human(owner_count));
+  return reserve_base.add(reserve_inc.multiply(owner_count));
 };
 
 /**
