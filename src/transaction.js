@@ -1054,6 +1054,65 @@ Transaction.prototype.setRegularKey = function (options_) {
   return this;
 };
 
+
+/**
+ * Construct a 'SignerListSet' transaction
+ *
+ * @param {String} account
+ * @param {Array} signers object in the form {address, weight}
+ * @param {Number} quorum
+ */
+
+Transaction.prototype.signerListSet = function (options_) {
+  var options = undefined;
+
+  if (typeof options_ === 'object') {
+    options = lodash.merge({}, options_);
+
+    if (lodash.isUndefined(options.account)) {
+      options.account = options.src;
+    }
+  } else {
+    options = {
+      account: arguments[0],
+      signers: arguments[1],
+      quorum: arguments[2]
+    };
+  }
+
+  this.setType('SignerListSet');
+  this.setAccount(options.account);
+
+  function formatSignerEntry (signer) {
+    var uInt160 = UInt160.from_json(signer.address);
+    if (!uInt160.is_valid()) {
+      throw new Error('signer.address must be a valid account');
+    }
+    var value = signer.weight;
+    var isValidUInt32 = typeof value === 'number' && value >= 0 && value < Math.pow(256, 4);
+    if (!isValidUInt32) {
+      throw new Error('signer.weight must be a valid UInt32');
+    }
+    return {
+      SignerEntry: {
+        Account: uInt160.to_json(),
+        SignerWeight: value
+      }      
+    }
+  }
+
+  if (!lodash.isUndefined(options.signers) && options.quorum) {
+    if (options.signers.length > 8) throw new Error('signer members must not more 8.');
+    this.tx_json.SignerEntries = lodash.map(options.signers, formatSignerEntry);
+  }
+
+  if (!lodash.isUndefined(options.quorum)) {
+    this._setUInt32('SignerQuorum', options.quorum);
+  }
+
+  return this;
+};
+
 /**
  * Construct a 'TrustSet' transaction
  *
