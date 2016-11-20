@@ -1752,6 +1752,93 @@ describe('Transaction', function() {
     });
   });
 
+  it('Construct signerListSet transaction', function() {
+    const transaction = new Transaction().signerListSet('rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm', [{address:'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK', weight:1}, {address:'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a', weight:1}], 2);
+
+    assert(transaction instanceof Transaction);
+    assert.deepEqual(transaction.tx_json, {
+      Flags: 0,
+      TransactionType: 'SignerListSet',
+      Account: 'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
+      SignerEntries: [
+        {
+          SignerEntry: {
+            Account: 'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK',
+            SignerWeight: 1
+          }
+        },
+        {
+          SignerEntry: {
+            Account: 'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a',
+            SignerWeight: 1
+          }
+        }
+      ],
+      SignerQuorum: 2
+    });
+  });
+
+  it('Construct signerListSet transaction - params object', function() {
+    const transaction = new Transaction().signerListSet({
+      account: 'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
+      signers: [
+        {address:'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK', weight:1},
+        {address:'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a', weight:1}
+      ],
+      quorum: 2
+    });
+
+    assert(transaction instanceof Transaction);
+    assert.deepEqual(transaction.tx_json, {
+      Flags: 0,
+      TransactionType: 'SignerListSet',
+      Account: 'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
+      SignerEntries: [
+        {
+          SignerEntry: {
+            Account: 'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK',
+            SignerWeight: 1
+          }
+        },
+        {
+          SignerEntry: {
+            Account: 'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a',
+            SignerWeight: 1
+          }
+        }
+      ],
+      SignerQuorum: 2
+    });
+  });
+
+  it('Construct signerListSet transaction - delete signerList', function() {
+    const transaction = new Transaction().signerListSet({
+      account: 'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
+      quorum: 0
+    });
+
+    assert(transaction instanceof Transaction);
+    assert.deepEqual(transaction.tx_json, {
+      Flags: 0,
+      TransactionType: 'SignerListSet',
+      Account: 'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
+      SignerQuorum: 0
+    });
+    assert.strictEqual(transaction.tx_json.SignerEntries, undefined)
+  });
+
+  it('Construct signerListSet transaction - invalid account', function() {
+    assert.throws(function() {
+      new Transaction().signerListSet('xrsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm', [{address:'rpzT237Ctpaa58KieifoK8RyBmmRwEcfhK', weight:1}, {address:'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a', weight:1}], 2);
+    });
+  });
+
+  it('Construct signerListSet transaction - invalid signer', function() {
+    assert.throws(function() {
+      new Transaction().signerListSet('xrsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm', [{address:'xrpzT237Ctpaa58KieifoK8RyBmmRwEcfhK', weight:1}, {address:'rpdxPs9CR93eLAc5DTvAgv4S9XJ1CzKj1a', weight:1}], 2);
+    });
+  });
+
   it('Construct Payment transaction', function() {
     const transaction = new Transaction().payment(
       'rsLEU1TPdCJPPysqhWYw9jD97xtG5WqSJm',
