@@ -333,7 +333,9 @@ Server.prototype.getHostID = Server.prototype.getServerID = function () {
 Server.prototype.disconnect = function () {
   var self = this;
 
-  if (!this.isConnected()) {
+  var isOpen = this._ws.readyState === 1;
+
+  if (!this.isConnected() && !isOpen) {
     this.once('socket_open', function () {
       self.disconnect();
     });
