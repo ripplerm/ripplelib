@@ -1,3 +1,9 @@
+##1.1.2
+
++ FIX server disconnect bug.
++ Add filterFn to transaction broadcast.
+
+
 ##1.1.1
 
 + FIX reserve computation bug.
