@@ -665,7 +665,12 @@ TransactionManager.prototype._request = function (tx) {
 
   tx.emit('presubmit');
 
-  submitRequest.broadcast().request();
+  var filterFn = function (res) {
+    if (! res.engine_result) return false;
+    var result = res.engine_result.slice(3);
+    return result == 'tes' || result == 'tec';
+  }
+  submitRequest.broadcast(filterFn).request();
   tx.attempts++;
 
   tx.emit('postsubmit');
