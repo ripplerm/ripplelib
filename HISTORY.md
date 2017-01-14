@@ -1,3 +1,7 @@
+##1.1.3
+
++ Remove duplicate tx flags
+
 ##1.1.2
 
 + FIX server disconnect bug.
