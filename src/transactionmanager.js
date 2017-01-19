@@ -8,6 +8,7 @@ var Transaction = require('./transaction').Transaction;
 var RippleError = require('./rippleerror').RippleError;
 var PendingQueue = require('./transactionqueue').TransactionQueue;
 var log = require('./log').internal.sub('transactionmanager');
+var Listener = require('./listener');
 
 /**
  * @constructor TransactionManager
@@ -29,10 +30,6 @@ function TransactionManager(account) {
   this._lastLedgerOffset = this._remote.last_ledger_offset;
   this._pending = new PendingQueue();
 
-  this._account.on('transaction-outbound', function (res) {
-    self._transactionReceived(res);
-  });
-
   this._remote.on('load_changed', function (load) {
     self._adjustFees(load);
   });
@@ -41,20 +38,18 @@ function TransactionManager(account) {
     self._updatePendingStatus(ledger);
   }
 
-  this._remote.on('ledger_closed', updatePendingStatus);
-
-  function handleReconnect() {
-    self._handleReconnect(function () {
-      // Handle reconnect, account_tx procedure first, before
-      // hooking back into ledger_closed
-      self._remote.on('ledger_closed', updatePendingStatus);
-    });
-  }
-
-  this._remote.on('disconnect', function () {
-    self._remote.removeListener('ledger_closed', updatePendingStatus);
-    self._remote.once('connect', handleReconnect);
+  this._account._listener.on('transaction-outbound', function(res) {
+    self._transactionReceived(res);
   });
+
+  this._account._listener.on('reconnected', function () {
+    self._loadSequence(function () {
+      // Resubmit pending transactions after sequence is loaded
+      self._resubmit();
+    });    
+  });
+
+  this._account._listener.on('ledger_closed', updatePendingStatus);
 
   // Query server for next account transaction sequence
   this._loadSequence();
@@ -87,40 +82,9 @@ TransactionManager._isTooBusy = function (error) {
  * @api private
  */
 
-TransactionManager.normalizeTransaction = function (tx) {
-  var transaction = {};
-  var keys = Object.keys(tx);
-
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
-    switch (k) {
-      case 'transaction':
-        // Account transaction stream
-        transaction.tx_json = tx[k];
-        break;
-      case 'tx':
-        // account_tx response
-        transaction.engine_result = tx.meta.TransactionResult;
-        transaction.result = transaction.engine_result;
-        transaction.tx_json = tx[k];
-        transaction.hash = tx[k].hash;
-        transaction.ledger_index = tx[k].ledger_index;
-        transaction.type = 'transaction';
-        transaction.validated = tx.validated;
-        break;
-      case 'meta':
-      case 'metadata':
-        transaction.metadata = tx[k];
-        break;
-      case 'mmeta':
-        // Don't copy mmeta
-        break;
-      default:
-        transaction[k] = tx[k];
-    }
-  }
-
-  return transaction;
+TransactionManager.normalizeTransaction = function(tx) {
+  if (tx.normalized) return tx;
+  return Listener.normalizeTransaction(tx);
 };
 
 /**
@@ -334,57 +298,6 @@ TransactionManager.prototype._loadSequence = function (callback_) {
   }
 
   this._account.getNextSequence(sequenceLoaded);
-};
-
-/**
- * On reconnect, load account_tx in case a pending transaction succeeded while
- * disconnected
- *
- * @param [Function] callback
- * @api private
- */
-
-TransactionManager.prototype._handleReconnect = function (callback_) {
-  var self = this;
-  var callback = typeof callback_ === 'function' ? callback_ : function () {};
-
-  if (!this._pending.length()) {
-    callback();
-    return;
-  }
-
-  function handleTransactions(err, transactions) {
-    if (err || typeof transactions !== 'object') {
-      if (self._remote.trace) {
-        log.info('error requesting account_tx', err);
-      }
-      callback();
-      return;
-    }
-
-    if (Array.isArray(transactions.transactions)) {
-      // Treat each transaction in account transaction history as received
-      transactions.transactions.forEach(self._transactionReceived, self);
-    }
-
-    callback();
-
-    self._loadSequence(function () {
-      // Resubmit pending transactions after sequence is loaded
-      self._resubmit();
-    });
-  }
-
-  var options = {
-    account: this._accountID,
-    ledger_index_min: this._pending.getMinLedger(),
-    ledger_index_max: -1,
-    binary: true,
-    parseBinary: true,
-    limit: 20
-  };
-
-  this._remote.requestAccountTx(options, handleTransactions);
 };
 
 /**

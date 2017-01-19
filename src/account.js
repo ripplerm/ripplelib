@@ -21,6 +21,7 @@ var UInt160 = require('./uint160').UInt160;
 var TransactionManager = require('./transactionmanager').TransactionManager;
 var sjcl = require('./utils').sjcl;
 var Base = require('./base').Base;
+var Listener = require('./listener');
 
 /**
  * @constructor Account
@@ -113,6 +114,7 @@ function Account(remote, account) {
 
   this.on('transaction', handleTransaction);
 
+  this._listener = new Listener(this);
   this._transactionManager = new TransactionManager(this);
 
   return this;
