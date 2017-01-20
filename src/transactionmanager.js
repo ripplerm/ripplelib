@@ -36,7 +36,7 @@ function TransactionManager(account) {
   function updatePendingStatus(ledger) {
     self._updatePendingStatus(ledger);
     self._lastClosedLedger = ledger.ledger_index;
-    if (self.getPending().getQueue().length) {
+    if (!self._pause_resubmit && self.getPending().getQueue().length) {
       self._resubmit();
     }
   }
@@ -134,6 +134,33 @@ TransactionManager.prototype._transactionReceived = function (tx) {
       break;
     default:
       submission.emit('error', transaction);
+  }
+};
+
+/**
+ * Pause resubmissions during high load
+ * resume when load decrease.
+ *
+ * @api private
+ */
+
+TransactionManager.prototype._handleLoadChanged = function() {
+  var servers = this._remote._servers;
+  var fees = [ ];
+
+  for (var i=0; i<servers.length; i++) {
+    var server = servers[i];
+    if (server._connected) {
+      var fee = 10 * (server._fee_base / server._fee_ref) * (server._load_factor / server._load_base);
+      fees.push(Math.ceil(fee));
+    }
+  }
+  if (fees.length == 0) return;
+
+  if (Math.min.apply(null, fees) > this._maxFee) {
+    this._pause_resubmit = true;
+  } else {
+    this._pause_resubmit = false;
   }
 };
 
