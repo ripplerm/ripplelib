@@ -159,7 +159,7 @@ describe('TransactionManager', function() {
     });
   });
   it('Handle received transaction -- Account mismatch', function(done) {
-    const tx = lodash.extend({ }, TX_STREAM_TRANSACTION);
+    const tx = lodash.merge({ }, TX_STREAM_TRANSACTION);
     lodash.extend(tx.transaction, {
       Account: 'rMP2Y5EZrVZdFKsow11NoKTE5FjXuBQd3d'
     });
@@ -258,36 +258,14 @@ describe('TransactionManager', function() {
     setImmediate(done);
   });
 
-  it('Wait ledgers', function(done) {
-    transactionManager._waitLedgers(3, done);
-
-    for (let i = 1; i <= 3; i++) {
-      rippledConnection.closeLedger();
-    }
-  });
-
-  it('Wait ledgers -- no ledgers', function(done) {
-    transactionManager._waitLedgers(0, done);
-  });
-
   it('Update pending status', function(done) {
     const transaction = Transaction.from_json(TX_STREAM_TRANSACTION.transaction);
     transaction.submitIndex = 1;
     transaction.tx_json.LastLedgerSequence = 10;
+    transaction._secret = ACCOUNT.secret;
 
-    let receivedMissing = false;
-    let receivedLost = false;
-
-    transaction.once('missing', function() {
-      receivedMissing = true;
-    });
-    transaction.once('lost', function() {
-      receivedLost = true;
-    });
     transaction.once('error', function(err) {
       assert.strictEqual(err.engine_result, 'tejMaxLedger');
-      assert(receivedMissing);
-      assert(receivedLost);
       done();
     });
 
@@ -306,15 +284,6 @@ describe('TransactionManager', function() {
     transaction.tx_json.LastLedgerSequence = 10;
     transaction.finalized = true;
 
-    let receivedMissing = false;
-    let receivedLost = false;
-
-    transaction.once('missing', function() {
-      receivedMissing = true;
-    });
-    transaction.once('lost', function() {
-      receivedLost = true;
-    });
     transaction.once('error', function() {
       assert(false, 'Should not err');
     });
@@ -327,8 +296,6 @@ describe('TransactionManager', function() {
     }
 
     setImmediate(function() {
-      assert(!receivedMissing);
-      assert(!receivedLost);
       done();
     });
   });
@@ -448,9 +415,11 @@ describe('TransactionManager', function() {
       set_flag: 'asfDisableMaster'
     });
 
+    let receivedProposed = false;
     let receivedSubmitted = false;
-    transaction.once('proposed', function() {
-      assert(false, 'Should not receive proposed event');
+    transaction.once('proposed', function(m) {
+      assert.strictEqual(m.engine_result, 'tecNO_REGULAR_KEY');
+      receivedProposed = true;
     });
     transaction.once('submitted', function(m) {
       assert.strictEqual(m.engine_result, 'tecNO_REGULAR_KEY');
@@ -473,6 +442,7 @@ describe('TransactionManager', function() {
 
     transaction.submit(function(err) {
       assert(err, 'Transaction submission should not succeed');
+      assert(receivedProposed);
       assert(receivedSubmitted);
       assert.strictEqual(err.engine_result, 'tecNO_REGULAR_KEY');
       assert.strictEqual(transactionManager.getPending().length(), 0);
@@ -490,6 +460,7 @@ describe('TransactionManager', function() {
     .account_data.Sequence + 1;
 
     let receivedSubmitted = false;
+    let receivedResubmitted = false;
     transaction.once('proposed', function() {
       assert(false, 'Should not receive proposed event');
     });
@@ -516,21 +487,28 @@ describe('TransactionManager', function() {
       }
     });
     rippled.once('request_submit', function(m, req) {
-      req.sendJSON(lodash.extend({}, LEDGER, {
-        ledger_index: transaction.tx_json.LastLedgerSequence + 1
-      }));
+      transaction.once('resubmitted', function() {
+        receivedResubmitted = true;
+        req.sendJSON(lodash.extend({}, LEDGER, {
+          ledger_index: transaction.tx_json.LastLedgerSequence + 1
+        }));
+      });
+      for (let i = 1; i <= 3; i++) {
+        req.closeLedger();
+      }
     });
 
     transaction.submit(function(err) {
       assert(err, 'Transaction submission should not succeed');
       assert.strictEqual(err.engine_result, 'tejMaxLedger');
       assert(receivedSubmitted);
+      assert(receivedResubmitted);
       assert.strictEqual(transactionManager.getPending().length(), 0);
       assert.strictEqual(transactionManager.getPending().length(), 0);
 
       const summary = transaction.summary();
-      assert.strictEqual(summary.submissionAttempts, 1);
-      assert.strictEqual(summary.submitIndex, 2);
+      assert.strictEqual(summary.submissionAttempts, 2);
+      assert.strictEqual(summary.submitIndex, 5);
       assert.strictEqual(summary.initialSubmitIndex, 2);
       assert.strictEqual(summary.lastLedgerSequence, 5);
       assert.strictEqual(summary.state, 'failed');
@@ -542,7 +520,7 @@ describe('TransactionManager', function() {
         ledger_index: undefined,
         transaction_hash: SUBMIT_TER_RESPONSE.result.tx_json.hash
       });
-      transactionManager.once('sequence_filled', done);
+      done();
     });
   });
 
@@ -578,8 +556,9 @@ describe('TransactionManager', function() {
           ledger_index: transaction.tx_json.LastLedgerSequence + 1
         }));
       });
-
-      req.closeLedger();
+      for (let i = 1; i <= 3; i++) {
+        req.closeLedger();
+      }
     });
 
     transaction.submit(function(err) {
@@ -591,7 +570,7 @@ describe('TransactionManager', function() {
 
       const summary = transaction.summary();
       assert.strictEqual(summary.submissionAttempts, 2);
-      assert.strictEqual(summary.submitIndex, 3);
+      assert.strictEqual(summary.submitIndex, 5);
       assert.strictEqual(summary.initialSubmitIndex, 2);
       assert.strictEqual(summary.lastLedgerSequence, 5);
       assert.strictEqual(summary.state, 'failed');
@@ -636,8 +615,9 @@ describe('TransactionManager', function() {
           ledger_index: transaction.tx_json.LastLedgerSequence + 1
         }));
       });
-
-      req.closeLedger();
+      for (let i = 1; i <= 3; i++) {
+        req.closeLedger();
+      }
     });
 
     transaction.submit(function(err) {
@@ -649,7 +629,7 @@ describe('TransactionManager', function() {
 
       const summary = transaction.summary();
       assert.strictEqual(summary.submissionAttempts, 2);
-      assert.strictEqual(summary.submitIndex, 3);
+      assert.strictEqual(summary.submitIndex, 5);
       assert.strictEqual(summary.initialSubmitIndex, 2);
       assert.strictEqual(summary.lastLedgerSequence, 5);
       assert.strictEqual(summary.state, 'failed');
