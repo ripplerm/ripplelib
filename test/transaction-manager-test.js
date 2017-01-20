@@ -216,13 +216,14 @@ describe('TransactionManager', function() {
   });
 
   it('Adjust pending transaction fee -- max fee exceeded', function(done) {
-    transactionManager._maxFee = 10;
+    transactionManager._maxFee = 15;
 
     const transaction = new Transaction(remote);
     transaction.tx_json = ACCOUNT_TX_TRANSACTION.tx;
 
     transaction.once('fee_adjusted', function() {
-      assert(false, 'Fee should not be adjusted');
+      assert.strictEqual(transaction.tx_json.Fee, '15');
+      done();
     });
 
     transactionManager.getPending().push(transaction);
@@ -233,8 +234,6 @@ describe('TransactionManager', function() {
       load_factor: 256 * 2,
       server_status: 'full'
     });
-
-    setImmediate(done);
   });
 
   it('Adjust pending transaction fee -- no local fee', function(done) {

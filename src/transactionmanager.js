@@ -152,13 +152,6 @@ TransactionManager.prototype._adjustFees = function () {
     return;
   }
 
-  function maxFeeExceeded(transaction) {
-    // Don't err until attempting to resubmit
-    transaction.once('presubmit', function () {
-      transaction.emit('error', 'tejMaxFeeExceeded');
-    });
-  }
-
   this._pending.forEach(function (transaction) {
     if (transaction._setFixedFee) {
       return;
@@ -167,11 +160,7 @@ TransactionManager.prototype._adjustFees = function () {
     var oldFee = transaction.tx_json.Fee;
     var newFee = transaction._computeFee();
 
-    if (Number(newFee) > self._maxFee) {
-      // Max transaction fee exceeded, abort submission
-      maxFeeExceeded(transaction);
-      return;
-    }
+    if (Number(newFee) > self._maxFee) newFee = String(self._maxFee);
 
     transaction.tx_json.Fee = newFee;
     transaction.emit('fee_adjusted', oldFee, newFee);

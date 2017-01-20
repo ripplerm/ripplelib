@@ -507,7 +507,7 @@ describe('Transaction', function() {
   });
 
   it('Complete transaction - compute fee exceeds max fee', function(done) {
-    const remote = new Remote({max_fee: 10});
+    const remote = new Remote({max_fee: 15});
 
     const s1 = new Server(remote, 'wss://s-west.ripple.com:443');
     s1._connected = true;
@@ -522,12 +522,9 @@ describe('Transaction', function() {
     transaction.tx_json.Account = 'rMWwx3Ma16HnqSd4H6saPisihX9aKpXxHJ';
     transaction._secret = 'sh2pTicynUEG46jjR4EoexHcQEoij';
 
-    transaction.once('error', function(err) {
-      assert.strictEqual(err.result, 'tejMaxFeeExceeded');
-      done();
-    });
-
-    assert(!transaction.complete());
+    assert(transaction.complete());
+    assert.strictEqual(transaction.tx_json.Fee, '15');
+    done();
   });
 
   it('Complete transaction - canonical flags', function(done) {

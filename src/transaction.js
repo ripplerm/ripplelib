@@ -421,6 +421,7 @@ Transaction.prototype.complete = function () {
         this.emit('error', new RippleError('tejUnconnected'));
         return false;
       }
+      if (Number(fee) > this._maxFee) fee = String(this._maxFee);
       if (this._multiSign) {
         var num = this._signerNum || 2; //default to 2-signatures
         this.tx_json.Fee = String(Number(fee) * (num + 1));
@@ -428,11 +429,6 @@ Transaction.prototype.complete = function () {
         this.tx_json.Fee = fee;  
       }      
     }
-  }
-
-  if (Number(this.tx_json.Fee) > this._maxFee) {
-    this.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
-    return false;
   }
 
   // Set canonical flag - this enables canonicalized signature checking
@@ -635,8 +631,8 @@ Transaction.prototype.setLastLedgerSequence = Transaction.prototype.setLastLedge
 };
 
 /**
- * Set max fee. Submission will abort if this is exceeded. Specified fee must
- * be >= 0.
+ * Set max fee. The maximum fee to be paid during high load condition.
+ * Specified fee must be >= 0.
  *
  * @param {Number} fee The proposed fee
  */
