@@ -3,10 +3,14 @@
 const assert = require('assert');
 const Seed = require('ripplelib').Seed;
 
-function assert_helper(seed_json, address_or_nth, expected) {
-  const seed = Seed.from_json(seed_json);
+function assert_helper(passphrase, address_or_nth, expected) {
+  const seed = new Seed().parse_passphrase(passphrase);
   const keypair = seed.get_key(address_or_nth, 500);
   assert.strictEqual(keypair.to_hex_pub(), expected);
+}
+
+function _isNaN(n) {
+  return typeof n === 'number' && isNaN(n);
 }
 
 describe('Seed', function() {
@@ -40,7 +44,7 @@ describe('Seed', function() {
     ];
 
     for (let nth = 0; nth < test_data.length; nth++) {
-      const seed_json = test_data[nth][0];
+      const passphrase = test_data[nth][0];
       const address = test_data[nth][1];
       const nth_for_seed = test_data[nth][2];
       const expected = test_data[nth][3];
@@ -49,10 +53,10 @@ describe('Seed', function() {
       // as it needs to generate `nth` many keypairs and generate hashed public
       // keys (addresses) for equality tests ??
       // Would need remote.set_secret(address, private_key_not_seed) ??
-      assert_helper(seed_json, address, expected);
+      assert_helper(passphrase, address, expected);
 
       // This isn't too bad as it only needs to generate one keypair `seq`
-      assert_helper(seed_json, nth_for_seed, expected);
+      assert_helper(passphrase, nth_for_seed, expected);
     }
 
   });
@@ -76,6 +80,56 @@ describe('Seed', function() {
       assert.strictEqual(e.message, 'Too many loops looking for KeyPair yielding ' + address + ' from ' + secret);
     }
 
+  });
+
+  describe('parse_json', function() {
+    it('empty string', function() {
+      assert(_isNaN(new Seed().parse_json('').to_json()));
+    });
+    it('hex string', function() {
+      // 32 0s is a valid hex repr of seed bytes
+      const str = new Array(33).join('0');
+      assert.strictEqual((new Seed().parse_json(str).to_json()),
+                         'sp6JS7f14BuwFY8Mw6bTtLKWauoUs');
+    });
+    it('rfc1751', function() {
+      const str = 'SLEW TALK DINT RIDE WET TINE BARK THEY JERK SLOT SLAB GONE';
+      assert.strictEqual((new Seed().parse_json(str).to_json()),
+                         'snoPBrXtMeMyMHUVTgbuqAfg1SUTb');
+    });
+    it('null', function() {
+      assert(_isNaN(new Seed().parse_json(null).to_json()));
+    });
+  });
+  describe('parse_passphrase', function() {
+    it('passphrase', function() {
+      const str = new Array(60).join('0');
+      assert.strictEqual('snFRPnVL3secohdpwSie8ANXdFQvG',
+                         new Seed().parse_passphrase(str).to_json());
+    });
+    it('invalid passphrase', function() {
+      assert.throws(function() {
+        new Seed().parse_passphrase(null);
+      });
+    });
+  });
+  describe('get_key', function() {
+    it('get key from invalid seed', function() {
+      assert.throws(function() {
+        new Seed().get_key('rBZ4j6MsoctipM6GEyHSjQKzXG3yambDnZ');
+      });
+    });
+  });
+
+  it('to rfc-1751 string', function() {
+    const seed = Seed.from_json('snoPBrXtMeMyMHUVTgbuqAfg1SUTb');
+    assert.strictEqual(seed.to_rfc1751(), 'SLEW TALK DINT RIDE WET TINE BARK THEY JERK SLOT SLAB GONE');
+  });
+
+  it('get_generator', function() {
+    const seed = Seed.from_json('snoPBrXtMeMyMHUVTgbuqAfg1SUTb');
+    assert.strictEqual(seed.get_generator().to_pub_hex(), '03D49C56E1B185F1BE899AE66A02EFC17F78EA6FC53AF85E0FE54C6E8B7F8C71A8');
+    assert.strictEqual(seed.get_generator().to_pub_node(), 'n94a1u4jAz288pZLtw6yFWVbi89YamiC6JBXPVUj5zmExe5fTVg9');
   });
 
 });

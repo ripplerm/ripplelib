@@ -26,37 +26,4 @@ describe('Signing', function() {
         '0330E7FC9D56BB25D6893BA3F317AE5BCF33B3291BD63DB32654A313222F7FD020');
     });
   });
-  describe('parse_json', function() {
-    it('empty string', function() {
-      assert(_isNaN(new Seed().parse_json('').to_json()));
-    });
-    it('hex string', function() {
-      // 32 0s is a valid hex repr of seed bytes
-      const str = new Array(33).join('0');
-      assert.strictEqual((new Seed().parse_json(str).to_json()),
-                         'sp6JS7f14BuwFY8Mw6bTtLKWauoUs');
-    });
-    it('passphrase', function() {
-      const str = new Array(60).join('0');
-      assert.strictEqual('snFRPnVL3secohdpwSie8ANXdFQvG',
-                         new Seed().parse_json(str).to_json());
-    });
-    it('null', function() {
-      assert(_isNaN(new Seed().parse_json(null).to_json()));
-    });
-  });
-  describe('parse_passphrase', function() {
-    it('invalid passphrase', function() {
-      assert.throws(function() {
-        new Seed().parse_passphrase(null);
-      });
-    });
-  });
-  describe('get_key', function() {
-    it('get key from invalid seed', function() {
-      assert.throws(function() {
-        new Seed().get_key('rBZ4j6MsoctipM6GEyHSjQKzXG3yambDnZ');
-      });
-    });
-  });
 });
