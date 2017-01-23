@@ -7,6 +7,7 @@ var sjcl = require('./utils').sjcl;
 var UInt160 = require('./uint160').UInt160;
 var UInt256 = require('./uint256').UInt256;
 var Base = require('./base').Base;
+var rfc1751 = require('./rfc1751');
 
 function KeyPair() {
   this._curve = sjcl.ecc.curves.k256;
@@ -49,6 +50,11 @@ KeyPair.prototype.parse_json = function (j) {
   var bn = undefined;
   if (/^[0-9a-fA-f]{64}$/.test(j)) {
     bn = new sjcl.bn(j, 16);
+  } else if (/^([A-Z]{1,4} +)+[A-Z]{1,4}$/.test(j)) {
+    try {
+      var bits = sjcl.codec.bytes.toBits(rfc1751.decode(j))
+      bn = sjcl.bn.fromBits(bits);
+    } catch (e) {};
   } else {
     var versions = [
       Base.VER_NODE_PRIVATE,
@@ -208,6 +214,13 @@ KeyPair.prototype.to_wif_bitcoin = function () {
   var bits = this._secret_bits();
   if (!bits) return null;
   return Base.encode_check(128, sjcl.codec.bytes.fromBits(bits), 'bitcoin');
+};
+
+KeyPair.prototype.to_human =
+KeyPair.prototype.to_rfc1751 = function () {
+  var bits = this._secret_bits();
+  if (!bits) return null;
+  return rfc1751.encode(sjcl.codec.bytes.fromBits(bits));
 };
 
 // get child-KeyPair, similar to the concept of bitcoin BIP-0032.

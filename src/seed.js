@@ -12,6 +12,7 @@ var Base = require('./base').Base;
 var UInt = require('./uint').UInt;
 var UInt160 = require('./uint160').UInt160;
 var KeyPair = require('./keypair').KeyPair;
+var rfc1751 = require('./rfc1751');
 
 var Seed = extend(function () {
   this._curve = sjcl.ecc.curves.k256;
@@ -27,24 +28,19 @@ Seed.getRandom = function () {
 }
 
 // value = NaN on error.
-// One day this will support rfc1751 too.
 Seed.prototype.parse_json = function (j) {
-  if (typeof j === 'string') {
-    if (!j.length) {
-      this._value = NaN;
-      // XXX Should actually always try and continue if it failed.
-    } else if (j[0] === 's') {
-        this._value = Base.decode_check(Base.VER_FAMILY_SEED, j);
-      } else if (/^[0-9a-fA-F]{32}$/.test(j)) {
-        this.parse_hex(j);
-        // XXX Should also try 1751
-      } else {
-          this.parse_passphrase(j);
-        }
-  } else {
-    this._value = NaN;
+  this._value = NaN;
+  if (typeof j === 'string' && j.length) {
+    if (j[0] === 's') {
+      this._value = Base.decode_check(Base.VER_FAMILY_SEED, j);
+    } else if (/^[0-9a-fA-F]{32}$/.test(j)) {
+      this.parse_hex(j);
+    } else if (/^([A-Z]{1,4} +)+[A-Z]{1,4}$/.test(j)){
+      try { 
+        this.parse_bytes(rfc1751.decode(j));
+      } catch (e) {};
+    }
   }
-
   return this;
 };
 
@@ -69,6 +65,14 @@ Seed.prototype.to_json = function () {
   var output = Base.encode_check(Base.VER_FAMILY_SEED, this.to_bytes());
 
   return output;
+};
+
+Seed.prototype.to_human =
+Seed.prototype.to_rfc1751 = function () {
+  if (!this.is_valid()) {
+    return NaN;
+  }
+  return rfc1751.encode(this.to_bytes());
 };
 
 function append_int(a, i) {
