@@ -31,6 +31,7 @@ function TransactionManager(account) {
 
   this._remote.on('load_changed', function (load) {
     self._adjustFees(load);
+    self._handleLoadChanged();
   });
 
   function updatePendingStatus(ledger) {
