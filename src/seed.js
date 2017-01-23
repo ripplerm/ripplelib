@@ -22,6 +22,10 @@ Seed.width = 16;
 Seed.prototype = Object.create(extend({}, UInt.prototype));
 Seed.prototype.constructor = Seed;
 
+Seed.getRandom = function () {
+  return this.from_bits(sjcl.random.randomWords(4, 6));
+}
+
 // value = NaN on error.
 // One day this will support rfc1751 too.
 Seed.prototype.parse_json = function (j) {
@@ -31,7 +35,7 @@ Seed.prototype.parse_json = function (j) {
       // XXX Should actually always try and continue if it failed.
     } else if (j[0] === 's') {
         this._value = Base.decode_check(Base.VER_FAMILY_SEED, j);
-      } else if (/^[0-9a-fA-f]{32}$/.test(j)) {
+      } else if (/^[0-9a-fA-F]{32}$/.test(j)) {
         this.parse_hex(j);
         // XXX Should also try 1751
       } else {
@@ -75,6 +79,24 @@ function firstHalfOfSHA512(bytes) {
   return sjcl.bitArray.bitSlice(sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)), 0, 256);
 }
 
+// get the FAMILY_GENERATOR
+// return as KeyPair
+Seed.prototype.get_generator = function () {
+  if (!this.is_valid()) {
+    throw new Error('Cannot generate keys from invalid seed!');
+  }
+  var private_gen = undefined;
+  var curve = this._curve;
+  var i = 0;
+
+  do {
+    private_gen = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(this.to_bytes(), i)));
+    i++;
+  } while (!curve.r.greaterEquals(private_gen));
+
+  return KeyPair.from_bn_secret(private_gen);
+};
+
 // Removed a `*` so this JSDoc-ish syntax is ignored.
 // This will soon all change anyway.
 /*
@@ -92,6 +114,7 @@ function firstHalfOfSHA512(bytes) {
 *                                    to generate a matching KeyPair
 *
 */
+
 Seed.prototype.get_key = function (account, maxLoops) {
   var account_number = 0,
       address = undefined;
@@ -103,40 +126,17 @@ Seed.prototype.get_key = function (account, maxLoops) {
   if (account) {
     if (typeof account === 'number') {
       account_number = account;
-      max_loops = account_number + 1;
     } else {
       address = UInt160.from_json(account);
     }
   }
 
-  var private_gen = undefined,
-      public_gen = undefined;
-  var curve = this._curve;
-  var i = 0;
+  var g = this.get_generator();
 
-  do {
-    private_gen = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(this.to_bytes(), i)));
-    i++;
-  } while (!curve.r.greaterEquals(private_gen));
-
-  public_gen = curve.G.mult(private_gen);
-
-  var sec = undefined;
   var key_pair = undefined;
-
   do {
-
-    i = 0;
-
-    do {
-      sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(public_gen.toBytesCompressed(), account_number), i)));
-      i++;
-    } while (!curve.r.greaterEquals(sec));
-
+    key_pair = g.get_child(account_number);
     account_number++;
-    sec = sec.add(private_gen).mod(curve.r);
-    key_pair = KeyPair.from_bn_secret(sec);
-
     if (max_loops-- <= 0) {
       // We are almost certainly looking for an account that would take same
       // value of $too_long {forever, ...}
@@ -146,5 +146,4 @@ Seed.prototype.get_key = function (account, maxLoops) {
 
   return key_pair;
 };
-
 exports.Seed = Seed;

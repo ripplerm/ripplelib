@@ -10,6 +10,7 @@ exports.UInt128 = require('./uint128').UInt128;
 exports.UInt160 = require('./uint160').UInt160;
 exports.UInt256 = require('./uint256').UInt256;
 exports.Seed = require('./seed').Seed;
+exports.KeyPair = require('./keypair').KeyPair;
 exports.Meta = require('./meta').Meta;
 exports.SerializedObject = require('./serializedobject').SerializedObject;
 exports.RippleError = require('./rippleerror').RippleError;
