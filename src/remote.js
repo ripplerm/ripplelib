@@ -36,6 +36,7 @@ var utils = require('./utils');
 var hashprefixes = require('./hashprefixes');
 var log = require('./log').internal.sub('remote');
 var Seed = require('./seed').Seed;
+var KeyPair = require('./keypair').KeyPair;
 
 /**
  * Interface to manage connections to rippled servers
@@ -363,9 +364,17 @@ Remote.prototype.generateKeyPair = function(secret, id) {
   }
 }
 
-// cache keypairs.
+/**
+ * Store a keypair 
+ *
+ * @param {String} account
+ * @param {String | KeyPair} privatekey string or KeyPair
+ *   privatekey can be in Hex, RFC1751, base58
+ */
 Remote.prototype.setKey =
 Remote.prototype.setKeyPair = function(account, key) {
+  key = KeyPair.from_json(key);
+  if (! key.is_valid()) throw new Error('Invalid private/keyPair!');
   this.keyPairs[account] = key;
 }
 
