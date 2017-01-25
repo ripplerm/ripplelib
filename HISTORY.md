@@ -1,6 +1,15 @@
+##1.2.0
+
++ ADD accountListener object
++ Remove 'tejMaxFeeExceeded' code
++ Modify the resubmission flow of TransactionManager
++ more complete functions for KeyPair and Seed, e.g. support RFC1751 format.
+
+
 ##1.1.3
 
 + Remove duplicate tx flags
+
 
 ##1.1.2
 
