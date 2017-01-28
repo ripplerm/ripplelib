@@ -398,10 +398,6 @@ Transaction.prototype.complete = function () {
     if (this._multiSign) { 
       this.tx_json.SigningPubKey = ''; 
     } else {
-      if (!this._secret && !(this._secret = this.getSecret())) {
-        this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
-        return false;
-      }      
       try {
         var key = this.getKey();
         this.tx_json.SigningPubKey = key.to_hex_pub();

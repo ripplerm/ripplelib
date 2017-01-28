@@ -437,7 +437,7 @@ describe('Transaction', function() {
     remote.local_signing = true;
 
     transaction.once('error', function(err) {
-      assert.strictEqual(err.result, 'tejSecretUnknown');
+      assert.strictEqual(err.result, 'tejSecretInvalid');
       done();
     });
 
