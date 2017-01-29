@@ -8,8 +8,7 @@
  * Mapping of type ids to data types. The type id is specified by the high
  *
  * For reference, see rippled's definition:
- * https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol
- *                                                              /SField.cpp
+ * https://github.com/ripple/rippled/blob/develop/src/ripple/protocol/impl/SField.cpp
  */
 
 exports.types = [undefined,
@@ -91,7 +90,8 @@ var FIELDS_MAP = exports.fields = {
     35: 'SignerQuorum',
     36: 'CancelAfter',
     37: 'FinishAfter',
-    38: 'SignerListID'    
+    38: 'SignerListID',
+    39: 'SettleDelay'
   },
   3: { // Int64
     1: 'IndexNext',
@@ -120,7 +120,9 @@ var FIELDS_MAP = exports.fields = {
     17: 'InvoiceID',
     18: 'Nickname',
     19: 'Amendment',
-    20: 'TicketID'
+    20: 'TicketID',
+    21: 'Digest',
+    22: 'Channel'
   },
   6: { // Amount
     1: 'Amount',
@@ -151,7 +153,11 @@ var FIELDS_MAP = exports.fields = {
     11: 'CreateCode',
     12: 'MemoType',
     13: 'MemoData',
-    14: 'MemoFormat'
+    14: 'MemoFormat',
+    //skip 15
+    16: 'Fulfillment',
+    17: 'Condition',
+    18: 'MasterSignature',
   },
   8: { // Account
     1: 'Account',
@@ -173,7 +179,9 @@ var FIELDS_MAP = exports.fields = {
     9: 'TemplateEntry',
     10: 'Memo',
     11: 'SignerEntry',
-    16: 'Signer'    
+    16: 'Signer',
+    // 17?
+    18: 'Majority'
   },
   15: { // Array
     1: undefined, // end of Array
@@ -184,14 +192,16 @@ var FIELDS_MAP = exports.fields = {
     6: 'Necessary',
     7: 'Sufficient',
     8: 'AffectedNodes',
-    9: 'Memos'
+    9: 'Memos',
+    16: 'Majorities'
   },
 
   // Uncommon types
   16: { // Int8
     1: 'CloseResolution',
-    2: 'TemplateEntryType',
-    3: 'TransactionResult'
+    2: 'Method',
+    3: 'TransactionResult',
+    16: 'TickSize'
   },
   17: { // Hash160
     1: 'TakerPaysCurrency',
@@ -221,41 +231,42 @@ var REQUIRED = exports.REQUIRED = 0,
     OPTIONAL = exports.OPTIONAL = 1,
     DEFAULT = exports.DEFAULT = 2;
 
-var base = [['TransactionType', REQUIRED], ['Flags', OPTIONAL], ['SourceTag', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['Account', REQUIRED], ['Sequence', REQUIRED], ['Fee', REQUIRED], ['OperationLimit', OPTIONAL], ['SigningPubKey', REQUIRED], ['TxnSignature', OPTIONAL], ['AccountTxnID', OPTIONAL], ['Memos', OPTIONAL], ['Signers', OPTIONAL]];
+var base = [['TransactionType', REQUIRED], ['Flags', OPTIONAL], ['SourceTag', OPTIONAL], ['Account', REQUIRED], ['Sequence', REQUIRED], ['PreviousTxnID', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['Fee', REQUIRED], ['OperationLimit', OPTIONAL], ['Memos', OPTIONAL], ['SigningPubKey', REQUIRED], ['TxnSignature', OPTIONAL], ['AccountTxnID', OPTIONAL], ['Signers', OPTIONAL]];
 
 exports.tx = {
-  AccountSet: [3].concat(base, [['EmailHash', OPTIONAL], ['WalletLocator', OPTIONAL], ['WalletSize', OPTIONAL], ['MessageKey', OPTIONAL], ['Domain', OPTIONAL], ['TransferRate', OPTIONAL], ['SetFlag', OPTIONAL], ['ClearFlag', OPTIONAL]]),
+  AccountSet: [3].concat(base, [['EmailHash', OPTIONAL], ['WalletLocator', OPTIONAL], ['WalletSize', OPTIONAL], ['MessageKey', OPTIONAL], ['Domain', OPTIONAL], ['TransferRate', OPTIONAL], ['SetFlag', OPTIONAL], ['ClearFlag', OPTIONAL], ['TickSize', OPTIONAL]]),
   TrustSet: [20].concat(base, [['LimitAmount', OPTIONAL], ['QualityIn', OPTIONAL], ['QualityOut', OPTIONAL]]),
   OfferCreate: [7].concat(base, [['TakerPays', REQUIRED], ['TakerGets', REQUIRED], ['Expiration', OPTIONAL], ['OfferSequence', OPTIONAL]]),
   OfferCancel: [8].concat(base, [['OfferSequence', REQUIRED]]),
   SetRegularKey: [5].concat(base, [['RegularKey', OPTIONAL]]),
   Payment: [0].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['SendMax', OPTIONAL], ['DeliverMin', OPTIONAL], ['Paths', DEFAULT], ['InvoiceID', OPTIONAL], ['DestinationTag', OPTIONAL]]),
-  Contract: [9].concat(base, [['Expiration', REQUIRED], ['BondAmount', REQUIRED], ['StampEscrow', REQUIRED], ['RippleEscrow', REQUIRED], ['CreateCode', OPTIONAL], ['FundCode', OPTIONAL], ['RemoveCode', OPTIONAL], ['ExpireCode', OPTIONAL]]),
-  RemoveContract: [10].concat(base, [['Target', REQUIRED]]),
-  EnableFeature: [100].concat(base, [['Feature', REQUIRED]]),
-  EnableAmendment: [100].concat(base, [['Amendment', REQUIRED]]),
-  SetFee: [101].concat(base, [['Features', REQUIRED], ['BaseFee', REQUIRED], ['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED]]),
+  EnableAmendment: [100].concat(base, [['LedgerSequence', REQUIRED], ['Amendment', REQUIRED]]),
+  SetFee: [101].concat(base, [['LedgerSequence', OPTIONAL], ['BaseFee', REQUIRED], ['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED]]),
   TicketCreate: [10].concat(base, [['Target', OPTIONAL], ['Expiration', OPTIONAL]]),
   TicketCancel: [11].concat(base, [['TicketID', REQUIRED]]),
   SignerListSet: [12].concat(base, [['SignerQuorum', REQUIRED], ['SignerEntries', OPTIONAL]]),
-  SuspendedPaymentCreate: [1].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['Digest', OPTIONAL], ['CancelAfter', OPTIONAL], ['FinishAfter', OPTIONAL], ['DestinationTag', OPTIONAL]]),
-  SuspendedPaymentFinish: [2].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED], ['Method', OPTIONAL], ['Digest', OPTIONAL], ['Proof', OPTIONAL]]),
-  SuspendedPaymentCancel: [4].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED]])  
+  SuspendedPaymentCreate: [1].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['Condition', OPTIONAL], ['CancelAfter', OPTIONAL], ['FinishAfter', OPTIONAL], ['DestinationTag', OPTIONAL]]),
+  SuspendedPaymentFinish: [2].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED], ['Fulfillment', OPTIONAL], ['Condition', OPTIONAL]]),
+  SuspendedPaymentCancel: [4].concat(base, [['Owner', REQUIRED], ['OfferSequence', REQUIRED]]),
+  PaymentChannelCreate: [13].concat(base, [['Destination', REQUIRED], ['Amount', REQUIRED], ['SettleDelay', REQUIRED], ['PublicKey', REQUIRED], ['CancelAfter', OPTIONAL], ['DestinationTag', OPTIONAL]]),
+  PaymentChannelFund: [14].concat(base, [['Channel', REQUIRED], ['Amount', REQUIRED], ['Expiration', OPTIONAL]]),
+  PaymentChannelClaim: [15].concat(base, [['Channel', REQUIRED], ['Amount', OPTIONAL], ['Balance', OPTIONAL], ['Signature', OPTIONAL], ['PublicKey', OPTIONAL]]),
 };
 
 var sleBase = [['LedgerIndex', OPTIONAL], ['LedgerEntryType', REQUIRED], ['Flags', REQUIRED]];
 
 exports.ledger = {
-  AccountRoot: [97].concat(sleBase, [['Sequence', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED], ['TransferRate', OPTIONAL], ['WalletSize', OPTIONAL], ['OwnerCount', REQUIRED], ['EmailHash', OPTIONAL], ['PreviousTxnID', REQUIRED], ['AccountTxnID', OPTIONAL], ['WalletLocator', OPTIONAL], ['Balance', REQUIRED], ['MessageKey', OPTIONAL], ['Domain', OPTIONAL], ['Account', REQUIRED], ['RegularKey', OPTIONAL]]),
-  Contract: [99].concat(sleBase, [['PreviousTxnLgrSeq', REQUIRED], ['Expiration', REQUIRED], ['BondAmount', REQUIRED], ['PreviousTxnID', REQUIRED], ['Balance', REQUIRED], ['FundCode', OPTIONAL], ['RemoveCode', OPTIONAL], ['ExpireCode', OPTIONAL], ['CreateCode', OPTIONAL], ['Account', REQUIRED], ['Owner', REQUIRED], ['Issuer', REQUIRED]]),
+  AccountRoot: [97].concat(sleBase, [['Sequence', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED], ['TransferRate', OPTIONAL], ['WalletSize', OPTIONAL], ['OwnerCount', REQUIRED], ['EmailHash', OPTIONAL], ['PreviousTxnID', REQUIRED], ['AccountTxnID', OPTIONAL], ['WalletLocator', OPTIONAL], ['Balance', REQUIRED], ['MessageKey', OPTIONAL], ['Domain', OPTIONAL], ['Account', REQUIRED], ['RegularKey', OPTIONAL], ['TickSize', OPTIONAL]]),
   DirectoryNode: [100].concat(sleBase, [['IndexNext', OPTIONAL], ['IndexPrevious', OPTIONAL], ['ExchangeRate', OPTIONAL], ['RootIndex', REQUIRED], ['Owner', OPTIONAL], ['TakerPaysCurrency', OPTIONAL], ['TakerPaysIssuer', OPTIONAL], ['TakerGetsCurrency', OPTIONAL], ['TakerGetsIssuer', OPTIONAL], ['Indexes', REQUIRED]]),
-  EnabledFeatures: [102].concat(sleBase, [['Features', REQUIRED]]),
-  FeeSettings: [115].concat(sleBase, [['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED], ['BaseFee', REQUIRED], ['LedgerIndex', OPTIONAL]]),
-  GeneratorMap: [103].concat(sleBase, [['Generator', REQUIRED]]),
-  LedgerHashes: [104].concat(sleBase, [['LedgerEntryType', REQUIRED], ['Flags', REQUIRED], ['FirstLedgerSequence', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['LedgerIndex', OPTIONAL], ['Hashes', REQUIRED]]),
-  Nickname: [110].concat(sleBase, [['LedgerEntryType', REQUIRED], ['Flags', REQUIRED], ['LedgerIndex', OPTIONAL], ['MinimumOffer', OPTIONAL], ['Account', REQUIRED]]),
-  Offer: [111].concat(sleBase, [['LedgerEntryType', REQUIRED], ['Flags', REQUIRED], ['Sequence', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED], ['Expiration', OPTIONAL], ['BookNode', REQUIRED], ['OwnerNode', REQUIRED], ['PreviousTxnID', REQUIRED], ['LedgerIndex', OPTIONAL], ['BookDirectory', REQUIRED], ['TakerPays', REQUIRED], ['TakerGets', REQUIRED], ['Account', REQUIRED]]),
-  RippleState: [114].concat(sleBase, [['LedgerEntryType', REQUIRED], ['Flags', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED], ['HighQualityIn', OPTIONAL], ['HighQualityOut', OPTIONAL], ['LowQualityIn', OPTIONAL], ['LowQualityOut', OPTIONAL], ['LowNode', OPTIONAL], ['HighNode', OPTIONAL], ['PreviousTxnID', REQUIRED], ['LedgerIndex', OPTIONAL], ['Balance', REQUIRED], ['LowLimit', REQUIRED], ['HighLimit', REQUIRED]])
+  Amendments: [102].concat(sleBase, [['Amendments', OPTIONAL], ['Majorities', OPTIONAL]]),
+  FeeSettings: [115].concat(sleBase, [['ReferenceFeeUnits', REQUIRED], ['ReserveBase', REQUIRED], ['ReserveIncrement', REQUIRED], ['BaseFee', REQUIRED]]),
+  LedgerHashes: [104].concat(sleBase, [['FirstLedgerSequence', OPTIONAL], ['LastLedgerSequence', OPTIONAL], ['Hashes', REQUIRED]]),
+  Offer: [111].concat(sleBase, [['Sequence', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED], ['Expiration', OPTIONAL], ['BookNode', REQUIRED], ['OwnerNode', REQUIRED], ['PreviousTxnID', REQUIRED], ['BookDirectory', REQUIRED], ['TakerPays', REQUIRED], ['TakerGets', REQUIRED], ['Account', REQUIRED]]),
+  RippleState: [114].concat(sleBase, [['PreviousTxnLgrSeq', REQUIRED], ['HighQualityIn', OPTIONAL], ['HighQualityOut', OPTIONAL], ['LowQualityIn', OPTIONAL], ['LowQualityOut', OPTIONAL], ['LowNode', OPTIONAL], ['HighNode', OPTIONAL], ['PreviousTxnID', REQUIRED], ['Balance', REQUIRED], ['LowLimit', REQUIRED], ['HighLimit', REQUIRED]]),
+  SuspendedPayment: [115].concat(sleBase, [['Account', REQUIRED], ['Destination', REQUIRED], ['Amount', REQUIRED], ['Condition', OPTIONAL], ['CancelAfter', OPTIONAL], ['FinishAfter', OPTIONAL], ['SourceTag', OPTIONAL], ['DestinationTag', OPTIONAL], ['OwnerNode', REQUIRED], ['PreviousTxnID', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED]]),
+  SignerList: [83].concat(sleBase, [['OwnerNode', REQUIRED], ['SignerQuorum', REQUIRED], ['SignerEntries', REQUIRED], ['SignerListID', REQUIRED], ['PreviousTxnID', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED]]),
+  Ticket: [84].concat(sleBase, [['Account', REQUIRED], ['Sequence', REQUIRED], ['OwnerNode', REQUIRED], ['Target', OPTIONAL], ['Expiration', OPTIONAL]]),
+  PayChannel: [120].concat(sleBase, [['Account', REQUIRED], ['Destination', REQUIRED], ['Amount', REQUIRED], ['Balance', REQUIRED], ['PublicKey', REQUIRED], ['SettleDelay', REQUIRED], ['Expiration', OPTIONAL], ['CancelAfter', OPTIONAL], ['SourceTag', OPTIONAL], ['DestinationTag', OPTIONAL], ['OwnerNode', REQUIRED], ['PreviousTxnID', REQUIRED], ['PreviousTxnLgrSeq', REQUIRED]]),
 };
 
 exports.metadata = [['TransactionIndex', REQUIRED], ['TransactionResult', REQUIRED], ['AffectedNodes', REQUIRED]];
