@@ -1227,6 +1227,146 @@ Transaction.prototype.payment = function (options_) {
   return this;
 };
 
+
+/**
+ * Construct a 'SuspendedPaymentCreate' transaction
+ * @param {String} source account
+ * @param {String} destination account
+ * @param {Amount} payment amount
+ * @param {String} condition
+ * @param [Number|Date] cancel after
+ * @param [Number|Date] finish after
+ */
+Transaction.prototype.susPayCreate = 
+Transaction.prototype.suspendedPaymentCreate = function (options_) {  
+  var options = undefined;
+
+  if (typeof options_ === 'object') {
+    options = lodash.merge({}, options_);
+
+    if (lodash.isUndefined(options.account)) {
+      options.account = options.src || options.from;
+    }
+    if (lodash.isUndefined(options.destination)) {
+      options.destination = options.dst || options.to;
+    }
+  } else {
+    options = {
+      account: arguments[0],
+      destination: arguments[1],
+      amount: arguments[2],
+      condition: arguments[3],
+      cancel_after: arguments[4],
+      finish_after: arguments[5],
+    };
+  }
+
+  this.setType('SuspendedPaymentCreate');
+  this.setAccount(options.account);
+  this.setDestination(options.destination);
+  this.setAmount(options.amount);
+
+  var dtag = options.destination_tag || options.dtag;
+  if (!lodash.isUndefined(dtag)) {
+    this._.setDestinationTag(dtag);
+  }
+
+  if (!lodash.isUndefined(options.condition)) {
+    this.tx_json.Condition = options.condition;
+  }
+
+  if (!lodash.isUndefined(options.cancel_after)) {
+    this._setTime('CancelAfter', options.cancel_after);
+  }
+
+  if (!lodash.isUndefined(options.finish_after)) {
+    this._setTime('FinishAfter', options.finish_after);
+  }
+
+  return this;
+};
+
+/**
+ * Construct a 'SuspendedPaymentFinish' transaction
+ * @param {String} account
+ * @param {String} owner account of the suspay
+ * @param [Number] sequence of the txn that create the suspay
+ * @param {String} condition
+ * @param {String} fulfillment
+ */
+Transaction.prototype.susPayExecute = 
+Transaction.prototype.susPayFinish = 
+Transaction.prototype.suspendedPaymentFinish = function (options_) {  
+  var options = undefined;
+
+  if (typeof options_ === 'object') {
+    options = lodash.merge({}, options_);
+
+    if (lodash.isUndefined(options.offer_sequence)) {
+      options.offer_sequence = options.sequence || options.seq;
+    }
+  } else {
+    options = {
+      account: arguments[0],
+      owner: arguments[1],
+      offer_sequence: arguments[2],
+      condition: arguments[3],
+      fulfillment: arguments[4],
+    };
+  }
+
+  this.setType('SuspendedPaymentFinish');
+  this.setAccount(options.account);
+  this.setOwner(options.owner);
+  this.setOfferSequence(options.offer_sequence);
+
+  if (!lodash.isUndefined(options.condition)) {
+    this.tx_json.Condition = options.condition;
+  }
+
+  if (!lodash.isUndefined(options.fulfillment)) {
+    this.tx_json.Fulfillment = options.fulfillment;
+  }
+
+  return this;
+};
+
+/**
+ * Construct a 'SuspendedPaymentCancel' transaction
+ * @param {String} account
+ * @param {String} owner account of the suspay
+ * @param [Number] sequence of the txn that create the suspay
+ */
+Transaction.prototype.susPayCancel = 
+Transaction.prototype.suspendedPaymentCancel = function (options_) {  
+  var options = undefined;
+
+  if (typeof options_ === 'object') {
+    options = lodash.merge({}, options_);
+
+    if (lodash.isUndefined(options.offer_sequence)) {
+      options.offer_sequence = options.sequence || options.seq;
+    }
+  } else {
+    options = {
+      account: arguments[0],
+      owner: arguments[1],
+      offer_sequence: arguments[2],
+    };
+  }
+
+  this.setType('SuspendedPaymentCancel');
+  this.setAccount(options.account);
+  this.setOwner(options.owner);
+  this.setOfferSequence(options.offer_sequence);
+
+  return this;
+};
+
+Transaction.prototype.setOwner = function (account) {
+  return this._setAccount('Owner', account);
+};
+
 Transaction.prototype.setAmount = function (amount) {
   // if (this.getType() !== 'Payment') {
   // throw new Error('TransactionType must be Payment to use SendMax');
@@ -1306,9 +1446,11 @@ Transaction.prototype.addPath = Transaction.prototype.pathAdd = function (path) 
   if (!Array.isArray(path)) {
     throw new Error('Path must be an array');
   }
-  // if (this.getType() !== 'Payment') {
-  // throw new Error('TransactionType must be Payment to use Paths');
-  // }
+
+  // Path must not be empty array
+  if (path.length === 0) {
+    return this;
+  }
 
   this.tx_json.Paths = this.tx_json.Paths || [];
   this.tx_json.Paths.push(Transaction._rewritePath(path));
@@ -1453,13 +1595,11 @@ Transaction.prototype.setTakerPays = function (amount) {
 };
 
 Transaction.prototype.setExpiration = function (expiration) {
-  // if (this.getType() !== 'OfferCreate') {
-  // throw new Error('TransactionType must be OfferCreate to use Expiration');
-  // }
+  return this._setTime('Expiration', expiration);
+};
 
-  var timeOffset = expiration instanceof Date ? expiration.getTime() : expiration;
-
-  return this._setUInt32('Expiration', utils.time.toRipple(timeOffset));
+Transaction.prototype._setTime = function (fieldname, time) {
+  return this._setUInt32(fieldname, utils.time.toRipple(time));
 };
 
 Transaction.prototype.setOfferSequence = function (offerSequence) {
