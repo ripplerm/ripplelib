@@ -875,7 +875,7 @@ Transaction.prototype.addMemo = function (options_) {
 
   if (memoData) {
     if (typeof memoData !== 'string') {
-      if (memoFormat.toLowerCase() === 'json') {
+      if (lodash.isString(memoFormat) && memoFormat.toLowerCase() == 'json') {
         try {
           memoData = JSON.stringify(memoData);
         } catch (e) {
@@ -885,8 +885,17 @@ Transaction.prototype.addMemo = function (options_) {
         throw new Error('MemoData can only be a JSON object with a valid json MemoFormat');
       }
     }
-
-    memo.MemoData = convertStringToHex(memoData);
+    if (lodash.isString(memoFormat) && memoFormat.toLowerCase() == 'hex') {
+      // no need to convert data that's already in hex
+      if (/^[0-9a-fA-F]+$/.test(memoData)){
+        memo.MemoData = memoData;
+      } else {
+        throw new Error('MemoFormat hex with invalid Hex String in MemoData field');
+      }
+    } else {
+      memo.MemoData = convertStringToHex(memoData);
+    }
+    
   }
 
   this.tx_json.Memos = (this.tx_json.Memos || []).concat({ Memo: memo });

@@ -779,10 +779,7 @@ exports.STMemo = new SerializedType({
     if (output.MemoType !== undefined) {
       try {
         var parsedType = convertHexToString(output.MemoType);
-
-        if (parsedType !== 'unformatted_memo') {
-          output.parsed_memo_type = parsedType;
-        }
+        output.parsed_memo_type = parsedType;
       } catch (e) {
         // empty
         // we don't know what's in the binary, apparently it's not a UTF-8
@@ -803,14 +800,17 @@ exports.STMemo = new SerializedType({
     }
 
     if (output.MemoData !== undefined) {
-
       try {
-        if (output.parsed_memo_format === 'json') {
-          // see if we can parse JSON
-          output.parsed_memo_data = JSON.parse(convertHexToString(output.MemoData));
-        } else if (output.parsed_memo_format === 'text') {
-          // otherwise see if we can parse text
-          output.parsed_memo_data = convertHexToString(output.MemoData);
+        if (output.parsed_memo_format && output.parsed_memo_format.toLowerCase() == 'hex') {
+          // just copy hex
+          output.parsed_memo_data = output.MemoData;
+        } else {
+          // convert to string
+          var data = output.parsed_memo_data = convertHexToString(output.MemoData);
+          if (output.parsed_memo_format && output.parsed_memo_format.toLowerCase() === 'json') {
+            // see if we can parse JSON
+            output.parsed_memo_data = JSON.parse(data);
+          }
         }
       } catch (e) {
         // empty

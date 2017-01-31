@@ -260,12 +260,12 @@ describe('Serialized object', function() {
         let so = SerializedObject.from_json(input_json).to_json();
         input_json.Memos[0].Memo.parsed_memo_type = 'test';
         input_json.Memos[0].Memo.parsed_memo_format = 'application/json';
+        input_json.Memos[0].Memo.parsed_memo_data = 'some data';
         input_json.Memos[0].Memo.MemoType = convertStringToHex('test');
         input_json.Memos[0].Memo.MemoFormat = convertStringToHex('application/json');
         input_json.Memos[0].Memo.MemoData = convertStringToHex('some data');
 
         assert.deepEqual(so, input_json);
-        assert.strictEqual(input_json.Memos[0].Memo.parsed_memo_data, undefined);
       });
 
       it('should serialize and parse - full memo, json data, valid MemoFormat, ignored field', function() {
