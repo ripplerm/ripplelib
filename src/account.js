@@ -128,6 +128,10 @@ util.inherits(Account, EventEmitter);
 
 Account.subscribeEvents = ['transaction', 'entry'];
 
+Account.prototype.getStream = function () {
+  return this._listener;
+};
+
 Account.prototype.toJson = function () {
   return this._account.to_json();
 };

@@ -13,6 +13,7 @@ function Listener (account) {
 	this._remote = account._remote;
 	this._minLedger = null;
 	this._marker = null;
+	this._memoFilter = ['Payment'];
 
 	function handleLedgerClosed (ledger) {
 		if (ledger.ledger_index <= self._minLedger) return;
@@ -109,16 +110,26 @@ Listener.prototype._transactionReceived = function (tx) {
 	if (marker < this._marker) return;
 
 	var account = transaction.tx_json.Account;
+	var type = transaction.tx_json.TransactionType;
 
-	if (transaction.tx_json.Memos && transaction.tx_json.Memos.length) {
-		this.emit(account == this._accountID ? 'memo-out' : 'memo-in', transaction);
-	}
+	this.emit('transaction', transaction);	
+	this.emit(account == this._accountID ? 'transaction-outbound' : 'transaction-inbound', transaction);
 
-	if (transaction.tx_json.TransactionType == 'Payment') {
+	if (type == 'Payment') {
+		this.emit('payment', transaction);
 		this.emit(account == this._accountID ? 'payment-out' : 'payment-in', transaction);
 	}
 
-	this.emit(account == this._accountID ? 'transaction-outbound' : 'transaction-inbound', transaction);
+	if (this._memoFilter.indexOf(type) >= 0 && transaction.tx_json.Memos && transaction.tx_json.Memos.length) {
+		var hasMemo = false
+		transaction.tx_json.Memos.forEach(function (m){
+			//only bother when memodata present
+			if (m.Memo.MemoData) hasMemo = true; 
+		});
+		if (! hasMemo) return;
+		this.emit('memo', transaction);
+		this.emit(account == this._accountID ? 'memo-out' : 'memo-in', transaction);
+	}
 
 	this._marker = marker;
 	this._minLedger = transaction.ledger_index;
