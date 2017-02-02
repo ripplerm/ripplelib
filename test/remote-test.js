@@ -1880,4 +1880,21 @@ describe('Remote', function() {
       subcommand: 'close'
     });
   });
+
+  it('Construct gateway_balances request', function() {
+    let request = remote.requestGatewayBalances({
+      account: 'rGr9PjmVe7MqEXTSbd3njhgJc2s5vpHV54',
+      hotwallet: 'rwxBjBC9fPzyQ9GgPZw6YYLNeRTSx5',
+      strict: true
+    });
+
+    assert.deepEqual(request.message, {
+      command: 'gateway_balances',
+      id: undefined,
+      account: 'rGr9PjmVe7MqEXTSbd3njhgJc2s5vpHV54',
+      hotwallet: 'rwxBjBC9fPzyQ9GgPZw6YYLNeRTSx5',
+      strict: true
+    });
+  });
+
 });
