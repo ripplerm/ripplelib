@@ -9,6 +9,7 @@ var RippleError = require('./rippleerror').RippleError;
 var Amount = require('./amount').Amount;
 var RangeSet = require('./rangeset').RangeSet;
 var log = require('./log').internal.sub('server');
+var Request = require('./request').Request;
 
 /**
  *  @constructor Server
@@ -110,12 +111,21 @@ function Server(remote, opts_) {
     self._activityInterval = setInterval(interval, 1000);
   }
 
+  function setServerStateInterval() {
+    var interval = self._checkServerState.bind(self);
+    self._serverStateInterval = setInterval(interval, 10 * 1000);
+  }
+
   this.on('disconnect', function onDisconnect() {
     clearInterval(self._activityInterval);
     self.once('ledger_closed', setActivityInterval);
+
+    clearInterval(self._serverStateInterval);
+    this.once('connect', setServerStateInterval);
   });
 
   this.once('ledger_closed', setActivityInterval);
+  this.once('connect', setServerStateInterval);
 
   this._remote.on('ledger_closed', function onRemoteLedgerClose(ledger) {
     self._updateScore('ledgerclose', ledger);
@@ -131,6 +141,7 @@ function Server(remote, opts_) {
 
   this.on('connect', function () {
     self.requestServerID();
+    self._checkServerState();
   });
 }
 
@@ -198,6 +209,21 @@ Server.prototype._setState = function (state) {
   }
 };
 
+Server.prototype._checkServerState = function () {
+  if (!this.isConnected()) {
+    return;
+  }
+  var self = this;
+  var req = new Request(this._remote, 'server_state');
+  req.setServer(this);
+  req.callback(function (err, res) {
+    if (err) return;
+    if (res && res.state) {
+      self._handleServerStatus(res.state)
+    }
+  })
+};
+
 /**
  * Check that server is still active.
  *
@@ -249,9 +275,9 @@ Server.prototype.requestServerID = function () {
     }
   });
 
-  var serverInfoRequest = this._remote.requestServerInfo();
-  serverInfoRequest.on('error', function () {});
-  this._request(serverInfoRequest);
+  var req = new Request(self._remote, 'server_info');
+  req.setServer(self);
+  this._request(req);
 };
 
 /**
@@ -290,7 +316,6 @@ Server.prototype._updateScore = function (type, data) {
       break;
     case 'loadchange':
       // Load/fee change
-      this._fee = Number(this._computeFee(10));
       break;
   }
 
@@ -580,11 +605,8 @@ Server.prototype._handleLedgerClosed = function (message) {
 };
 
 Server.prototype._handleServerStatus = function (message) {
-  // This message is only received when online.
-  // As we are connected, it is the definitive final state.
-  var isOnline = ~Server.onlineStates.indexOf(message.server_status);
-
-  this._setState(isOnline ? 'online' : 'offline');
+  message.server_status = message.server_status || message.server_state;
+  message.validated_ledgers = message.validated_ledgers || message.complete_ledgers;
 
   if (!Server.isLoadStatus(message)) {
     return;
@@ -598,6 +620,10 @@ Server.prototype._handleServerStatus = function (message) {
   if (loadChanged) {
     this._load_base = message.load_base;
     this._load_factor = message.load_factor;
+    this._load_factor_fee_queue = message.load_factor_fee_queue;
+    this._load_factor_fee_reference = message.load_factor_fee_reference;
+    this._load_factor_fee_escalation = message.load_factor_fee_escalation;
+    this._fee = Number(this._computeFee(10));
     this.emit('load_changed', message, this);
     this._remote.emit('load_changed', message, this);
   }
@@ -689,6 +715,7 @@ Server.prototype._handleResponseSubscribe = function (message) {
     this._reserve_base = message.reserve_base;
     this._reserve_inc = message.reserve_inc;
   }
+
 
   if (message.validated_ledgers) {
     // Add validated ledgers to ledger range set
