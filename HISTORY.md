@@ -1,3 +1,8 @@
+##1.2.1
++ ADD suspay transactions
++ ADD gateway_balances request
++ FIX server load monitoring
+
 ##1.2.0
 
 + ADD accountListener object
@@ -9,7 +14,6 @@
 ##1.1.3
 
 + Remove duplicate tx flags
-
 
 ##1.1.2
 
