@@ -623,7 +623,7 @@ Server.prototype._handleServerStatus = function (message) {
     this._load_factor_fee_queue = message.load_factor_fee_queue;
     this._load_factor_fee_reference = message.load_factor_fee_reference;
     this._load_factor_fee_escalation = message.load_factor_fee_escalation;
-    this._fee = Number(this._computeFee(10));
+    this._fee = Number(this._computeFee(this._fee_ref));
     this.emit('load_changed', message, this);
     this._remote.emit('load_changed', message, this);
   }
@@ -714,6 +714,7 @@ Server.prototype._handleResponseSubscribe = function (message) {
     this._fee_base = message.fee_base || 10;
     this._reserve_base = message.reserve_base;
     this._reserve_inc = message.reserve_inc;
+    this._fee = this._computeFee(this._fee_ref);
   }
 
 
@@ -843,6 +844,7 @@ Server.prototype._computeFee = function (feeUnits) {
     throw new Error('Invalid argument');
   }
 
+  if (!feeUnits) feeUnits = this._fee_ref;
   return this._feeTx(Number(feeUnits)).to_json();
 };
 
