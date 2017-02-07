@@ -645,21 +645,19 @@ Server.prototype._handleResponse = function (message) {
   }
 
   if (message.status === 'success') {
-    (function () {
-      if (_this._remote.trace) {
-        log.info(_this.getServerID(), 'response:', message);
-      }
+    if (_this._remote.trace) {
+      log.info(_this.getServerID(), 'response:', message);
+    }
 
-      var command = request.message.command;
-      var result = message.result;
-      var responseEvent = 'response_' + command;
+    var command = request.message.command;
+    var result = message.result;
+    var responseEvent = 'response_' + command;
 
-      request.emit('success', result);
+    request.emit('success', result, _this);
 
-      [_this, _this._remote].forEach(function (emitter) {
-        emitter.emit(responseEvent, result, request, message);
-      });
-    })();
+    [_this, _this._remote].forEach(function (emitter) {
+      emitter.emit(responseEvent, result, request, message);
+    });
   } else if (message.error) {
     if (this._remote.trace) {
       log.info(this.getServerID(), 'error:', message);
@@ -669,8 +667,9 @@ Server.prototype._handleResponse = function (message) {
       error: 'remoteError',
       error_message: 'Remote reported an error.',
       remote: message
-    });
+    }, this);
   }
+  request.emit('response', message, this);
 };
 
 Server.prototype._handlePathFind = function (message) {

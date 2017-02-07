@@ -108,7 +108,8 @@ Request.prototype.filter = Request.prototype.addFilter = Request.prototype.broad
 
     if (server.isConnected()) {
       // Listen for proxied success/error event and apply filter
-      self.once('proposed', function (res) {
+      self.on('proposed', function (res, res_server) {
+        if (res_server !== server) return;
         lastResponse = res;
         callback(filterFn(res));
       });

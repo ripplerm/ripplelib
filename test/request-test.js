@@ -113,14 +113,15 @@ describe('Request', function() {
     servers[0]._request = function(req) {
       ++requests;
       checkRequest(req);
-      req.emit('error', errorResponse);
+      req.emit('error', errorResponse, this);
     };
 
     servers[1]._request = function(req) {
       ++requests;
       checkRequest(req);
+      var self = this;
       setImmediate(function() {
-        req.emit('success', successResponse);
+        req.emit('success', successResponse, self);
       });
     };
 
@@ -184,7 +185,7 @@ describe('Request', function() {
     function sendError(req) {
       ++requests;
       checkRequest(req);
-      req.emit('error', errorResponse);
+      req.emit('error', errorResponse, this);
     }
 
     servers[0]._request = sendError;
@@ -252,8 +253,9 @@ describe('Request', function() {
     servers[1]._request = function(req) {
       ++requests;
       checkRequest(req);
+      var self = this;
       setImmediate(function() {
-        req.emit('success', successResponse);
+        req.emit('success', successResponse, self);
       });
     };
 
@@ -340,13 +342,13 @@ describe('Request', function() {
     servers[0]._request = function(req) {
       ++requests;
       checkRequest(req);
-      req.emit('success', successResponse);
+      req.emit('success', successResponse, this);
     };
     servers[1]._request = function(req) {
       ++requests;
       checkRequest(req);
 
-      req.emit('error', errorResponse);
+      req.emit('error', errorResponse, this);
 
       servers[0]._connected = true;
       servers[0].emit('connect');
@@ -441,12 +443,12 @@ describe('Request', function() {
     servers[0]._request = function(req) {
       ++requests;
       checkRequest(req);
-      req.emit('success', successResponse);
+      req.emit('success', successResponse, this);
     };
     servers[1]._request = function(req) {
       ++requests;
       checkRequest(req);
-      req.emit('error', errorResponse);
+      req.emit('error', errorResponse, this);
     };
 
     const remote = new Remote();
