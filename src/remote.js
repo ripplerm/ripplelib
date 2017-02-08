@@ -456,10 +456,14 @@ Remote.prototype.connect = function (callback) {
     throw new Error('No servers available.');
   }
 
-  if (typeof callback === 'function') {
-    this.once('connect', callback);
+  if (typeof callback !== 'function') callback = function () {};
+
+  if (this.isConnected()) {
+    callback();
+    return this;
   }
 
+  this.once('connect', callback);
   this._should_connect = true;
 
   this._servers.forEach(function (server) {
