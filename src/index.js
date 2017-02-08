@@ -37,7 +37,6 @@ exports._test = {
 // the official client, it makes sense to expose the SJCL instance so we don't
 // have to include it twice.
 exports.sjcl = require('./utils').sjcl;
-exports.Wallet = require('ripple-wallet-generator')({ sjcl: exports.sjcl });
 exports.types = require('./serializedtypes');
 
 // camelCase to under_scored API conversion
