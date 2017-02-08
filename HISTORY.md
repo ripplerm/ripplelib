@@ -1,3 +1,7 @@
+##1.2.2
++ Remove dependency on ripple-wallet-generator
++ FIX some minor bugs
+
 ##1.2.1
 + ADD suspay transactions
 + ADD gateway_balances request
