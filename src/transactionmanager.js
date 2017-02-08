@@ -46,9 +46,9 @@ function TransactionManager(account) {
     self._transactionReceived(res);
   });
 
-  this._account._listener.on('reconnected', function () {
+  this._account._listener.on('reconnected', function (err) {
     self._loadSequence(); // reset nextSequence
-    self._resubmit(); // re-submit pending transactions
+    if (!err) self._resubmit(); // re-submit pending transactions
   });
 
   this._account._listener.on('ledger_closed', updatePendingStatus);

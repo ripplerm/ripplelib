@@ -22,11 +22,11 @@ function Listener (account) {
 	}
 
 	function handleReconnect() {
-		self._handleReconnect(function() {
+		self._handleReconnect(function (err) {
 		  // Handle reconnect, account_tx procedure first, before
 		  // hooking back into ledger_closed
 		  self._remote.on('ledger_closed', handleLedgerClosed);
-		  self.emit('reconnected');
+		  self.emit('reconnected', err);
 		});
 	}
 
@@ -67,7 +67,7 @@ Listener.prototype._handleReconnect = function (callback){
 
 	function handleTransactions(err, transactions) {
 	    if (err || typeof transactions !== 'object') {
-      		callback();	    	
+      		callback(true);	    	
 	      	return;
 	    }
 
