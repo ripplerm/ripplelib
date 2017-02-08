@@ -182,7 +182,7 @@ Listener.normalizeTransaction = function(tx) {
     }
   }
 
-  if (transaction.metadata) {
+  if (transaction.engine_result == 'tesSUCCESS' && transaction.metadata) {
 	switch (typeof transaction.metadata.DeliveredAmount) {
 	case 'string':
 	case 'object':
