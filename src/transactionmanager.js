@@ -190,7 +190,8 @@ TransactionManager.prototype._adjustFees = function () {
     var oldFee = transaction.tx_json.Fee;
     var newFee = transaction._computeFee();
 
-    if (Number(newFee) > self._maxFee) newFee = String(self._maxFee);
+    var maxFee = transaction._maxFee || self._maxFee;
+    if (Number(newFee) > maxFee) newFee = String(maxFee);
 
     transaction.tx_json.Fee = newFee;
     transaction.emit('fee_adjusted', oldFee, newFee);

@@ -220,6 +220,7 @@ describe('TransactionManager', function() {
 
     const transaction = new Transaction(remote);
     transaction.tx_json = ACCOUNT_TX_TRANSACTION.tx;
+    transaction._maxFee = 15;
 
     transaction.once('fee_adjusted', function() {
       assert.strictEqual(transaction.tx_json.Fee, '15');
