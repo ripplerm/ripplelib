@@ -323,7 +323,7 @@ Server.prototype._updateScore = function (type, data) {
     if (this._remote.trace) {
       log.info(this.getServerID(), 'reconnect: score:', this._score);
     }
-    this.reconnect();
+    this.reconnect(10); //delay 10secs before reconnect
   }
 };
 
@@ -388,13 +388,16 @@ Server.prototype.disconnect = function () {
  * @api public
  */
 
-Server.prototype.reconnect = function () {
+Server.prototype.reconnect = function (delay_secs) {
   var self = this;
 
   function reconnect() {
     self._shouldConnect = true;
     self._retry = 0;
-    self.connect();
+    if (typeof delay_secs !== 'number') delay_secs = 0;
+    setTimeout(function () {
+      self.connect();
+    }, delay_secs * 1000);
   }
 
   if (this._ws && this._shouldConnect) {
