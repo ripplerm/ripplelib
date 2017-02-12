@@ -776,7 +776,7 @@ describe('Remote', function() {
     remote._servers[0].emit('message', message);
     assert.strictEqual(remote.getServer(), remote._servers[0]);
 
-    message.ledger_index += 1;
+    message.ledger_index += 2;
 
     remote._servers[1].emit('message', message);
     assert.strictEqual(remote.getServer(), remote._servers[1]);

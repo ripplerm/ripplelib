@@ -304,7 +304,7 @@ Server.prototype._updateScore = function (type, data) {
     case 'ledgerclose':
       // Ledger lag
       delta = data.ledger_index - this._lastLedgerIndex;
-      if (delta > 0) {
+      if (delta > 1) {
         this._score += weight * delta;
       }
       break;
