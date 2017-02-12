@@ -316,6 +316,8 @@ Server.prototype._updateScore = function (type, data) {
       break;
     case 'loadchange':
       // Load/fee change
+      delta = Math.floor(this._load_factor / this._load_base / 1000);
+      this._score += weight * delta;
       break;
   }
 
