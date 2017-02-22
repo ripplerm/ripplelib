@@ -248,21 +248,28 @@ Account.prototype.line = function (currency, address, callback) {
   var self = this;
   var callback = typeof callback === 'function' ? callback : function () {};
 
-  self.lines(function (err, data) {
-    if (err) {
-      return callback(err);
+  this._remote.requestRippleBalance({
+    account: this._account_id,
+    issuer: address,
+    currency: currency,
+    ledger: 'validated'     
+  }, function (err, res) {
+    if (err) return callback(err);
+    var line = {
+        account: address,
+        currency: currency,
+        balance: res.account_balance.to_text(),
+        limit: res.account_limit.to_text(),
+        limit_peer: res.peer_limit.to_text(),
+        quality_in: res.account_quality_in,
+        quality_out: res.account_quality_out,
+        no_ripple: res.account_no_ripple,
+        no_ripple_peer: res.peer_no_ripple,
+        freeze: res.account_freeze,
+        freeze_peer: res.peer_freeze,
+        authorized: res.account_authorized,
+        peer_authorized: res.peer_authorized,
     }
-
-    var line;
-
-    top: for (var i = 0; i < data.lines.length; i++) {
-      var l = data.lines[i];
-      if (l.account === address && l.currency === currency) {
-        line = l;
-        break top;
-      }
-    }
-
     callback(null, line);
   });
 
