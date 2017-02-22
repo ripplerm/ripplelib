@@ -224,13 +224,33 @@ Account.prototype.lines = function (callback) {
     if (err) {
       callback(err);
     } else {
+      res.lines = Lines;
       self._lines = res.lines;
       self.emit('lines', self._lines);
       callback(null, res);
     }
   }
 
-  this._remote.requestAccountLines({ account: this._account_id }, accountLines);
+  var Count = 0;
+  var Lines = [];
+  var opts = {
+    account: this._account_id,
+    ledger: 'validated'
+  }
+
+  this._remote.requestAccountLines(opts, function handle_lines (err, res) {
+    if (err) return accountLines(err);
+    Lines = Lines.concat(res.lines);
+    var marker = res.marker;
+    if (marker) {
+      self.emit('lines_marker', marker, ++Count);
+      opts.marker = marker;
+      opts.ledger = res.ledger_index;
+      self._remote.requestAccountLines(opts, handle_lines);
+    } else {
+      accountLines(null, res);
+    }
+  });
 
   return this;
 };
