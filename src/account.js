@@ -296,6 +296,85 @@ Account.prototype.line = function (currency, address, callback) {
   return this;
 };
 
+
+/**
+ * Retrieve this account's Offers.
+ *
+ * @param {function(err, lines)} callback Called with the result
+ */
+
+Account.prototype.offers = function (callback) {
+  var self = this;
+  var callback = typeof callback === 'function' ? callback : function () {};
+
+  function accountOffers(err, res) {
+    if (err) {
+      callback(err);
+    } else {
+      res.offers = Offers;
+      self._offers = Offers;
+      self.emit('offers', Offers);
+      callback(null, res);
+    }
+  }
+
+  var Count = 0;
+  var Offers = [];
+  var opts = {
+    account: this._account_id,
+    ledger: 'validated'
+  }
+
+  this._remote.requestAccountOffers(opts, function handle_response (err, res) {
+    if (err) return accountOffers(err);
+    Offers = Offers.concat(res.offers);
+    var marker = res.marker;
+    if (marker) {
+      self.emit('offers_marker', marker, ++Count);
+      opts.marker = marker;
+      opts.ledger = res.ledger_index;
+      self._remote.requestAccountOffers(opts, handle_response);
+    } else {
+      accountOffers(null, res);
+    }
+  });
+
+  return this;
+};
+
+/**
+ * Retrieve offer by sequence.
+ *
+ * @param {Number} sequence
+ * @returns {Account}
+ */
+
+Account.prototype.offer = function (sequence, callback) {
+  var self = this;
+  var callback = typeof callback === 'function' ? callback : function () {};
+
+  var opts = {
+    account: this._account_id,
+    sequence: sequence
+  };
+
+  this._remote.requestOffer(opts, function (err, res){
+    if (err) return callback(err);
+    var node = res.node;
+    var offer = {
+      taker_gets: node.TakerGets,
+      taker_pays: node.TakerPays,
+      expiration: node.Expiration,
+      flags: node.Flags,
+      quality: Amount.from_json(node.TakerPays).divide(node.TakerGets).to_text()
+    }
+    callback(null, offer);
+  });
+
+  return this;
+};
+
+
 /**
  * Notify object of a relevant transaction.
  *
