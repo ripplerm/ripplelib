@@ -2294,6 +2294,8 @@ Remote.prototype.requestRippleBalance = function (options_, callback_) {
     var node = message.node;
     var lowLimit = Amount.from_json(node.LowLimit);
     var highLimit = Amount.from_json(node.HighLimit);
+    var flags = node.Flags;
+    var sflags = Remote.flags.state;
 
     // The amount the low account holds of issuer.
     var balance = Amount.from_json(node.Balance);
@@ -2310,7 +2312,13 @@ Remote.prototype.requestRippleBalance = function (options_, callback_) {
       account_quality_in: accountHigh ? node.HighQualityIn : node.LowQualityIn,
       peer_quality_in: !accountHigh ? node.HighQualityIn : node.LowQualityIn,
       account_quality_out: accountHigh ? node.HighQualityOut : node.LowQualityOut,
-      peer_quality_out: !accountHigh ? node.HighQualityOut : node.LowQualityOut
+      peer_quality_out: !accountHigh ? node.HighQualityOut : node.LowQualityOut,
+      account_no_ripple: Boolean(accountHigh ? sflags.HighNoRipple & flags : sflags.LowNoRipple & flags),
+      peer_no_ripple: Boolean(!accountHigh ? sflags.HighNoRipple & flags : sflags.LowNoRipple & flags),
+      account_freeze: Boolean(accountHigh ? sflags.HighFreeze & flags : sflags.LowFreeze & flags),
+      peer_freeze: Boolean(!accountHigh ? sflags.HighFreeze & flags : sflags.LowFreeze & flags),
+      account_authorized: Boolean(accountHigh ? sflags.HighAuth & flags : sflags.LowAuth & flags),
+      peer_authorized: Boolean(!accountHigh ? sflags.HighAuth & flags : sflags.LowAuth & flags),
     });
   }
 
