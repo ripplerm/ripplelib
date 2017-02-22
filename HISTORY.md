@@ -1,3 +1,9 @@
+##1.2.3
++ Allow transaction._maxFee to overwrite TxnManager's.
++ Some changes on server._score computation, and reconnection.
++ Account.lines to request complete trustlines with iterating call.
++ Add account.offers method
+
 ##1.2.2
 + Remove dependency on ripple-wallet-generator
 + FIX some minor bugs
