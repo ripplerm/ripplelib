@@ -1229,7 +1229,7 @@ Transaction.prototype.payment = function (options_) {
 
 
 /**
- * Construct a 'SuspendedPaymentCreate' transaction
+ * Construct a 'EscrowCreate' transaction
  * @param {String} source account
  * @param {String} destination account
  * @param {Amount} payment amount
@@ -1237,8 +1237,7 @@ Transaction.prototype.payment = function (options_) {
  * @param [Number|Date] cancel after
  * @param [Number|Date] finish after
  */
-Transaction.prototype.susPayCreate = 
-Transaction.prototype.suspendedPaymentCreate = function (options_) {  
+Transaction.prototype.escrowCreate = function (options_) {  
   var options = undefined;
 
   if (typeof options_ === 'object') {
@@ -1261,7 +1260,7 @@ Transaction.prototype.suspendedPaymentCreate = function (options_) {
     };
   }
 
-  this.setType('SuspendedPaymentCreate');
+  this.setType('EscrowCreate');
   this.setAccount(options.account);
   this.setDestination(options.destination);
   this.setAmount(options.amount);
@@ -1287,16 +1286,14 @@ Transaction.prototype.suspendedPaymentCreate = function (options_) {
 };
 
 /**
- * Construct a 'SuspendedPaymentFinish' transaction
+ * Construct a 'EscrowFinish' transaction
  * @param {String} account
- * @param {String} owner account of the suspay
- * @param [Number] sequence of the txn that create the suspay
+ * @param {String} owner account of the escrow
+ * @param [Number] sequence of the txn that create the escrow
  * @param {String} condition
  * @param {String} fulfillment
  */
-Transaction.prototype.susPayExecute = 
-Transaction.prototype.susPayFinish = 
-Transaction.prototype.suspendedPaymentFinish = function (options_) {  
+Transaction.prototype.escrowFinish = function (options_) {  
   var options = undefined;
 
   if (typeof options_ === 'object') {
@@ -1315,7 +1312,7 @@ Transaction.prototype.suspendedPaymentFinish = function (options_) {
     };
   }
 
-  this.setType('SuspendedPaymentFinish');
+  this.setType('EscrowFinish');
   this.setAccount(options.account);
   this.setOwner(options.owner);
   this.setOfferSequence(options.offer_sequence);
@@ -1332,13 +1329,12 @@ Transaction.prototype.suspendedPaymentFinish = function (options_) {
 };
 
 /**
- * Construct a 'SuspendedPaymentCancel' transaction
+ * Construct a 'EscrowCancel' transaction
  * @param {String} account
- * @param {String} owner account of the suspay
- * @param [Number] sequence of the txn that create the suspay
+ * @param {String} owner account of the escrow
+ * @param [Number] sequence of the txn that create the escrow
  */
-Transaction.prototype.susPayCancel = 
-Transaction.prototype.suspendedPaymentCancel = function (options_) {  
+Transaction.prototype.escrowCancel = function (options_) {  
   var options = undefined;
 
   if (typeof options_ === 'object') {
@@ -1355,7 +1351,7 @@ Transaction.prototype.suspendedPaymentCancel = function (options_) {
     };
   }
 
-  this.setType('SuspendedPaymentCancel');
+  this.setType('EscrowCancel');
   this.setAccount(options.account);
   this.setOwner(options.owner);
   this.setOfferSequence(options.offer_sequence);
