@@ -14,6 +14,7 @@
     "test": "test"
   },
   "dependencies": {
+    "asn1.js": "^4.9.0",
     "async": "~0.9.0",
     "babel-runtime": "^5.8.20",
     "bignumber.js": "^2.0.3",

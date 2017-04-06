@@ -1,5 +1,8 @@
 'use strict';
 
+var sjcl = require('../build/sjcl');
+var cc = require('./cryptocondition');
+
 function getMantissaDecimalString(bignum) {
   var mantissa = bignum.toPrecision(16).replace(/\./, '') // remove decimal point
   .replace(/e.*/, '') // remove scientific notation
@@ -136,10 +139,40 @@ function fromTimestamp(timestamp) {
   return Math.round(timestamp_ / 1000) - 0x386D4380;
 }
 
+function passphraseToFulfillment (passphrase, type) {
+  type = type || 'preimageSha256Fulfillment';
+
+  var JsonAsn1 = {
+    type: type,
+    value: {
+      preimage: Buffer.from(passphrase, 'utf8')
+    }
+  }
+  return cc.Fulfillment.encode(JsonAsn1).toString('hex').toUpperCase();
+}
+
+function passphraseToCondition (passphrase, type) {
+  type = type || 'preimageSha256Condition';
+
+  var JsonAsn1 = {
+    type: type,
+    value: {
+      fingerprint: sjcl.codec.bytes.fromBits(sjcl.hash.sha256.hash(passphrase)),
+      cost: Buffer.from(passphrase, 'utf8').length
+    }
+  }
+  return cc.Condition.encode(JsonAsn1).toString('hex').toUpperCase();
+}
+
 exports.time = {
   fromRipple: toTimestamp,
   toRipple: fromTimestamp
 };
+
+exports.cc = {
+  passphraseToCondition: passphraseToCondition,
+  passphraseToFulfillment: passphraseToFulfillment
+}
 
 exports.trace = trace;
 exports.arraySet = arraySet;
@@ -155,6 +188,6 @@ exports.toTimestamp = toTimestamp;
 exports.fromTimestamp = fromTimestamp;
 exports.getMantissaDecimalString = getMantissaDecimalString;
 
-exports.sjcl = require('../build/sjcl');
+exports.sjcl = sjcl;
 
 // vim:sw=2:sts=2:ts=8:et
