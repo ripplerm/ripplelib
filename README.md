@@ -1,9 +1,9 @@
-#ripplelib
+# ripplelib
 
 A JavaScript API for interacting with Ripple in Node.js and the browser
 (a fork from ripple-lib-0.12)
 
-##Features
+## Features
 
 + Connect to a rippled server in JavaScript (Node.js or browser)
 + Issue [rippled API](https://ripple.com/build/rippled-apis/) requests
@@ -11,7 +11,7 @@ A JavaScript API for interacting with Ripple in Node.js and the browser
 + Sign and submit transactions to the Ripple network
 
 
-##Installation
+## Installation
 
 **Via npm for Node.js**
 
@@ -35,7 +35,7 @@ You may generate browser builds that contain a subset of features. To do this, r
 
 + `build-core` Contains the functionality to make requests and listen for events such as `ledgerClose`. Only `ripple.Remote` is currently exposed. Advanced features like transaction submission and orderbook tracking are excluded from this build.
 
-##Quick start
+## Quick start
 
 `Remote.js` ([remote.js](https://github.com/ripplerm/ripplelib/blob/master/dist/npm/remote.js)) is the point of entry for interacting with rippled
 
@@ -59,7 +59,7 @@ remote.connect(function() {
 });
 ```
 
-##Running tests
+## Running tests
 
 1. Clone the repository
 
@@ -67,6 +67,6 @@ remote.connect(function() {
 
 3. `npm test`
 
-##More Information
+## More Information
 
 + [Ripple Dev Portal](https://ripple.com/build/)
