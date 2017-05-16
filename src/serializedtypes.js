@@ -66,11 +66,6 @@ function convertByteArrayToHex(byte_array) {
   return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
 }
 
-function convertHexToString(hexString) {
-  var bits = sjcl.codec.hex.toBits(hexString);
-  return sjcl.codec.utf8String.fromBits(bits);
-}
-
 function sort_fields(keys) {
   function sort_field_compare(a, b) {
     var a_field_coordinates = binformat.fieldsInverseMap[a];
@@ -778,7 +773,7 @@ exports.STMemo = new SerializedType({
 
     if (output.MemoType !== undefined) {
       try {
-        var parsedType = convertHexToString(output.MemoType);
+        var parsedType = utils.convertHexToString(output.MemoType);
         output.parsed_memo_type = parsedType;
       } catch (e) {
         // empty
@@ -790,7 +785,7 @@ exports.STMemo = new SerializedType({
 
     if (output.MemoFormat !== undefined) {
       try {
-        output.parsed_memo_format = convertHexToString(output.MemoFormat);
+        output.parsed_memo_format = utils.convertHexToString(output.MemoFormat);
       } catch (e) {
         // empty
         // we don't know what's in the binary, apparently it's not a UTF-8
@@ -806,7 +801,7 @@ exports.STMemo = new SerializedType({
           output.parsed_memo_data = output.MemoData;
         } else {
           // convert to string
-          var data = output.parsed_memo_data = convertHexToString(output.MemoData);
+          var data = output.parsed_memo_data = utils.convertHexToString(output.MemoData);
           if (output.parsed_memo_format && output.parsed_memo_format.toLowerCase() === 'json') {
             // see if we can parse JSON
             output.parsed_memo_data = JSON.parse(data);

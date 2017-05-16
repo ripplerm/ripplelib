@@ -842,11 +842,6 @@ Transaction.prototype.addMemo = function (options_) {
     };
   }
 
-  function convertStringToHex(string) {
-    var utf8String = sjcl.codec.utf8String.toBits(string);
-    return sjcl.codec.hex.fromBits(utf8String).toUpperCase();
-  }
-
   var memo = {};
   var memoRegex = Transaction.MEMO_REGEX;
   var memoType = options.memoType;
@@ -862,7 +857,7 @@ Transaction.prototype.addMemo = function (options_) {
       // memo types
       memoType = Transaction.MEMO_TYPES[memoType];
     }
-    memo.MemoType = convertStringToHex(memoType);
+    memo.MemoType = utils.convertStringToHex(memoType);
   }
 
   if (memoFormat) {
@@ -870,7 +865,7 @@ Transaction.prototype.addMemo = function (options_) {
       throw new Error('MemoFormat must be a string containing only valid URL characters');
     }
 
-    memo.MemoFormat = convertStringToHex(memoFormat);
+    memo.MemoFormat = utils.convertStringToHex(memoFormat);
   }
 
   if (memoData) {
@@ -893,7 +888,7 @@ Transaction.prototype.addMemo = function (options_) {
         throw new Error('MemoFormat hex with invalid Hex String in MemoData field');
       }
     } else {
-      memo.MemoData = convertStringToHex(memoData);
+      memo.MemoData = utils.convertStringToHex(memoData);
     }
     
   }

@@ -30,6 +30,16 @@ function arraySet(count, value) {
   return a;
 }
 
+function convertHexToString(hexString) {
+  var bits = sjcl.codec.hex.toBits(hexString);
+  return sjcl.codec.utf8String.fromBits(bits);
+}
+
+function convertStringToHex(string) {
+  var utf8String = sjcl.codec.utf8String.toBits(string);
+  return sjcl.codec.hex.fromBits(utf8String).toUpperCase();
+}
+
 function hexToString(h) {
   var a = [];
   var i = 0;
@@ -176,6 +186,8 @@ exports.cc = {
 
 exports.trace = trace;
 exports.arraySet = arraySet;
+exports.convertStringToHex = convertStringToHex;
+exports.convertHexToString = convertHexToString;
 exports.hexToString = hexToString;
 exports.hexToArray = hexToArray;
 exports.stringToArray = stringToArray;
