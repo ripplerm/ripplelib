@@ -74,13 +74,13 @@ var Fulfillment = asn.define('Fulfillment', function () {
 })
 
 module.exports = {
-  Simple256Condition,
-  Compound256Condition,
-  Condition,
-  PreimageFulfillment,
-  PrefixFulfillment,
-  ThresholdFulfillment,
-  RsaSha256Fulfillment,
-  Ed25519Sha256Fulfillment,
-  Fulfillment
+  Simple256Condition: Simple256Condition, 
+  Compound256Condition: Compound256Condition,
+  Condition: Condition,
+  PreimageFulfillment: PreimageFulfillment,
+  PrefixFulfillment: PrefixFulfillment,
+  ThresholdFulfillment: ThresholdFulfillment,
+  RsaSha256Fulfillment: RsaSha256Fulfillment,
+  Ed25519Sha256Fulfillment: Ed25519Sha256Fulfillment,
+  Fulfillment: Fulfillment
 }

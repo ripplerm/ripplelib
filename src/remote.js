@@ -2556,7 +2556,7 @@ Remote.prototype.requestGatewayBalances = function(options, callback) {
   assert(lodash.isObject(options), 'Options missing');
   assert(options.account, 'Account missing');
 
-  const request = new Request(this, 'gateway_balances');
+  var request = new Request(this, 'gateway_balances');
 
   request.message.account = UInt160.json_rewrite(options.account);
 
