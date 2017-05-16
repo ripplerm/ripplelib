@@ -2299,6 +2299,7 @@ describe('OrderBook', function() {
               currency: '0000000000000000000000005553440000000000',
               issuer: addresses.ISSUER
             },
+            limit: 100,
             taker: 'rrrrrrrrrrrrrrrrrrrrBZbvji'
           });
 

@@ -145,6 +145,9 @@ function Remote() {
   if (typeof this.last_ledger_offset !== 'number') {
     throw new TypeError('last_ledger_offset must be a number');
   }
+  if (typeof this.orderbook_limit !== 'number') {
+    throw new TypeError('orderbook_limit must be a number');
+  }
   if (!Array.isArray(this.servers)) {
     throw new TypeError('servers must be an array');
   }
@@ -199,6 +202,7 @@ Remote.DEFAULTS = {
   max_attempts: 10,
   submission_timeout: 1000 * 20,
   last_ledger_offset: 3,
+  orderbook_limit: 100,
   servers: [],
   max_listeners: 0 // remove Node EventEmitter warnings
 };
@@ -1697,6 +1701,8 @@ Remote.prototype.requestBookOffers = function (options_, callback_) {
     }
 
     request.message.limit = limit;
+  } else {
+    request.message.limit = this.orderbook_limit;
   }
 
   request.callback(callback);

@@ -1554,6 +1554,7 @@ describe('Remote', function() {
       taker_pays: {
         currency: Currency.from_human('XRP').to_hex()
       },
+      limit: 100,
       taker: UInt160.ACCOUNT_ONE
     });
   });
