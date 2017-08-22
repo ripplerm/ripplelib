@@ -1,3 +1,8 @@
+## 1.2.5
++ Make orderbook limit configurable.
++ Update Bignumber.js to v4.0.2
++ fallback to ws0.8.1
+
 ## 1.2.4
 + ADD escrow transactions, remove suspays.
 + ADD utils for cryto-conditions
